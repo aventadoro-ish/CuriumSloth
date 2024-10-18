@@ -52,7 +52,7 @@ int PlayBuffer(short *piBuf, long lSamples)
 
 	// stop previous note (just in case)
 	waveOutReset(HWaveOut);   // is this good?
-
+	
 	// get the header ready for playback
 	WaveHeader.lpData = (char *)piBuf;
 	WaveHeader.dwBufferLength = lSamples * sizeof(short);
@@ -156,7 +156,7 @@ void CloseRecording(void)
 
 /* SUPPORT FUNCTIONS USED BY PLAYBACK FUNCTIONS - Updated 2021 */
 /* ********************************************************************************************* */
-// Function needed by InitializePlayback() - SetupFormat() initializes a WAVEFORMATEX structure to the required parameters (sample rate, bits per sample, etc) 
+// Function needed by InitializePlayback() - setupFormat() initializes a WAVEFORMATEX structure to the required parameters (sample rate, bits per sample, etc) 
 static void SetupFormat(WAVEFORMATEX* wf)
 {
 	wf->wFormatTag = WAVE_FORMAT_PCM;
