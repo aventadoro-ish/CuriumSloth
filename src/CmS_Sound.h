@@ -34,6 +34,7 @@ private:
 
 	int initializeRecording();
 	int recordBuffer();
+	int waitOnHeader(WAVEHDR* wh, char cDit);
 
 public:
 

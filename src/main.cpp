@@ -7,6 +7,8 @@ Details: Testing mainline for Windows sound API
 #include "sound.h"
 #include <stdio.h>
 #include <windows.h>
+#include "CmS_Sound.h"
+
 
 int	main(int argc, char *argv[])
 {

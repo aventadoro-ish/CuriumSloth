@@ -47,10 +47,31 @@ int AudioRecorder::initializeRecording() {
 }
 
 int AudioRecorder::recordBuffer() {
+	MMRESULT	mmErr;
+	int		rc;
 
+	printf("Recording now.....");
 
+	// stop previous recording (just in case)
+	waveInReset(hWaveIn);   // is this good?
 
-	return 0;
+	rc = waveInPrepareHeader(hWaveIn, &waveHeaderIn, sizeof(WAVEHDR));
+	if (rc) {
+		cout << "Failed preparing WAVEHDR, error: " << rc << endl;
+		return(0);
+	}
+	waveHeaderIn.dwFlags &= ~(WHDR_BEGINLOOP | WHDR_ENDLOOP);
+
+	// Give the buffer to the recording device to fill.
+	mmErr = waveInAddBuffer(hWaveIn, &waveHeaderIn, sizeof(WAVEHDR));
+	// Record the buffer. This is NON-blocking.
+	mmErr = waveInStart(hWaveIn);
+	// wait for completion
+	rc = waitOnHeader(&waveHeaderIn, '.');
+	// stop input
+	waveInStop(hWaveIn);
+	return(rc);
+
 }
 
 int AudioRecorder::recordAudio(uint32_t seconds, uint32_t samplesPerSecond) {
@@ -78,4 +99,18 @@ int AudioRecorder::recordAudio(uint32_t seconds, uint32_t samplesPerSecond) {
 	}
 
 	return 0;
+}
+
+
+int AudioRecorder::waitOnHeader(WAVEHDR* wh, char cDit) {
+	long	lTime = 0;
+	// wait for whatever is being played, to finish. Quit after 10 seconds.
+	for (; ; ) {
+		if (wh->dwFlags & WHDR_DONE) return(1);
+		// idle for a bit so as to free CPU
+		Sleep(100L);
+		lTime += 100;
+		if (lTime >= 10000) return(0);  // timeout period
+		if (cDit) printf("%c", cDit);
+	}
 }
