@@ -5,11 +5,16 @@ Details: Testing mainline for Windows sound API
 */
 
 #include "sound.h"
+#include "Queue.h"
+#include <iostream>
 #include <stdio.h>
 #include <windows.h>
 
-int	main(int argc, char *argv[])
+int	main(int argc, char *argv[]) //change to test audio bring it into diagnostics into sub menu .h and .cpp into program and test it out
 {
+
+
+
 	extern short iBigBuf[];												// buffer
 	extern long  lBigBufSize;											// total number of samples
 	short* iBigBufNew = (short*)malloc(lBigBufSize*sizeof(short));		// buffer used for reading recorded sound from file
@@ -18,6 +23,24 @@ int	main(int argc, char *argv[])
 	char replay;
 	char c;																// used to flush extra input
 	FILE* f;
+	
+
+	QueueGen<int> q;  // Create a queue of integers
+
+	// Enqueue three elements into the queue
+	q.enqueue(10);
+	q.enqueue(20);
+	q.enqueue(30);
+
+	// Print the front element (should print 10)
+	cout << "Front element: " << q.peek() << endl;
+
+	// Dequeue the front element and print the new front (should print 20)
+	q.dequeue();
+	cout << "Front element after dequeue: " << q.peek() << endl;
+
+	// Print the current size of the queue (should print 2)
+	cout << "Queue size: " << q.getSize() << endl;
 
 	// initialize playback and recording
 	InitializePlayback();
