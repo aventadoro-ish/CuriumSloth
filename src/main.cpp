@@ -1,74 +1,85 @@
-/*	Filename: main.cpp
-Author: Michael Galle
-Date: Updated 2022
-Details: Testing mainline for Windows sound API
-*/
+ /* main.cpp : terminal based ui for a messaging system
+  * Date: Oct 2024
+  * Author:
+  *         Mat Regentov
+  *         Besart Kalezic
+  *         Gobind Matharu
+  */
+ 
+#include <iostream>
+#include <queue>
+#include <string>
+#include "terminal.h"  // Include terminal-related functions
 
-#include "sound.h"
-#include <stdio.h>
-#include <windows.h>
+using namespace std;
 
-int	main(int argc, char *argv[])
-{
-	extern short iBigBuf[];												// buffer
-	extern long  lBigBufSize;											// total number of samples
-	short* iBigBufNew = (short*)malloc(lBigBufSize*sizeof(short));		// buffer used for reading recorded sound from file
+// Function prototypes for non-terminal logic
+void recordAudio();
+void playAudio();
+void queueMessage();
+void displayQueue();
+void communicationSettings();
 
-	char save;
-	char replay;
-	char c;																// used to flush extra input
-	FILE* f;
+// Global message queue definition
+queue<string> messageQueue;
 
-	// initialize playback and recording
-	InitializePlayback();
-	InitializeRecording();
+int main() {
+    int choice;
+    bool running = true;
 
-	// start recording
-	RecordBuffer(iBigBuf, lBigBufSize);
-	CloseRecording();
+    while (running) {
+        displayMenu(); // Show the menu (from terminal.h)
+        choice = getChoice(); // Get the user's choice (from terminal.h)
 
-	// playback recording 
-	printf("\nPlaying recording from buffer\n");
-	PlayBuffer(iBigBuf, lBigBufSize);
-	ClosePlayback();
+        switch (choice) {
+            case 1:
+                recordAudio();
+                break;
+            case 2:
+                playAudio();
+                break;
+            case 3:
+                queueMessage();
+                break;
+            case 4:
+                displayQueue();
+                break;
+            case 5:
+                communicationSettings();
+                break;
+            case 0:
+                running = false; // Exit the loop
+                printf("Exiting the program. Goodbye!\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
 
-	// save audio recording  
-	printf("Would you like to save your audio recording? (y/n): "); 
-	scanf_s("%c", &save, 1);
-	while ((c = getchar()) != '\n' && c != EOF) {}								// Flush other input
-	if ((save == 'y') || (save == 'Y')) {
-		/* Open input file */
-		fopen_s(&f, "C:\\myfiles\\recording.dat", "wb");
-		if (!f) {
-			printf("unable to open %s\n", "C:\\myfiles\\recording.dat");
-			return 0;
-		}
-		printf("Writing to sound file ...\n");
-		fwrite(iBigBuf, sizeof(short), lBigBufSize, f);
-		fclose(f);
-	}
+    return 0;
+}
 
-	// replay audio recording from file -- read and store in buffer, then use playback() to play it
-	printf("Would you like to replay the saved audio recording from the file? (y/n): ");
-	scanf_s("%c", &replay, 1);
-	while ((c = getchar()) != '\n' && c != EOF) {}								// Flush other input
-	if ((replay == 'y') || (replay == 'Y')) {
-		/* Open input file */
-		fopen_s(&f, "C:\\myfiles\\recording.dat", "rb");
-		if (!f) {
-			printf("unable to open %s\n", "C:\\myfiles\\recording.dat");
-			return 0;
-		}
-		printf("Reading from sound file ...\n");
-		fread(iBigBufNew, sizeof(short), lBigBufSize, f);				// Record to new buffer iBigBufNew
-		fclose(f);
-		InitializePlayback();
-		printf("\nPlaying recording from saved file ...\n");
-		PlayBuffer(iBigBufNew, lBigBufSize);
-		ClosePlayback();
-	}
-	
-	printf("\n");
-	system("pause");
-	return(0);
+// Placeholder function for recording audio
+void recordAudio() {
+    printf("Recording audio (placeholder)...\n");
+    // In actual implementation, you'd capture audio here.
+}
+
+// Placeholder function for playing back audio
+void playAudio() {
+    printf("Playing audio (placeholder)...\n");
+    // In actual implementation, you'd play audio here.
+}
+
+// Function to queue a message
+void queueMessage() {
+}
+
+// Function to display queued messages
+void displayQueue() {
+}
+
+// Placeholder for communication settings function
+void communicationSettings() {
+    printf("Adjust communication settings (placeholder)...\n"); // In actual implementation, you can modify settings like bitrate, etc.
 }
