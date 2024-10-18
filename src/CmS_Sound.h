@@ -32,12 +32,39 @@ private:
 		uint32_t samplesPerSecond = 8000,
 		uint16_t bitsPerSample = 8);
 
+	/* ------------- Recording functions -------------- */
+
+	/// <summary>
+	/// Prepares member variables for a new recording
+	/// </summary>
+	/// <returns> 0 if success </returns>
 	int initializeRecording();
+	
+	/// <summary>
+	/// Records audio to a member buffer using member parameters
+	/// </summary>
+	/// <returns> 0 if success </returns>
 	int recordBuffer();
+
+	/// <summary>
+	/// Wait for completion of recroding/replay of wh (with 10sec timeout)
+	/// </summary>
+	/// <param name="wh">audio header to wait for</param>
+	/// <param name="cDit">char to put to console while waiting</param>
+	/// <returns> 0 if success, -1 if timeout</returns>
 	int waitOnHeader(WAVEHDR* wh, char cDit);
+
+
+
 
 public:
 
+	/// <summary>
+	/// Record audio with given parameters. Cannot overwrite the member buffer
+	/// </summary>
+	/// <param name="seconds">number of seconds to recrod for</param>
+	/// <param name="samplesPerSecond">samples per second to record</param>
+	/// <returns>0 if success</returns>
 	int recordAudio(uint32_t seconds, uint32_t samplesPerSecond);
 };
 
