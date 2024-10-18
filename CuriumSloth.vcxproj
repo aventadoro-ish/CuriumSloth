@@ -127,7 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CuriumSloth.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\sound.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\sound.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
