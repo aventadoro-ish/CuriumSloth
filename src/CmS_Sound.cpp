@@ -18,42 +18,13 @@ AudioRecorder::AudioRecorder(
 
 	recSamplesPerSencod = samplesPerSecond;
 	recBitsPerSample = bitsPerSample;
+	recNumCh = numChannels;
 
 }
 
 AudioRecorder::~AudioRecorder() {
+	clearBuffer();
 }
-
-int AudioRecorder::recordAudio(uint32_t seconds) {
-	if (recBuf != nullptr) {
-		cerr << "ERROR! Trying to rewrite recBuf!" << endl;
-		return -1;
-	}
-
-	recBufSize = seconds * recSamplesPerSencod;
-	recBuf = (short*)malloc(recBufSize * sizeof(short));
-	if (recBuf == nullptr) {
-		cerr << "ERROR! Could not allocate memory for recBuf!" << endl;
-		return -1;
-	}
-
-
-	initializeRecording();
-	recordBuffer();
-	closeRecordring();
-	return 0;
-}
-
-int AudioRecorder::replayAudio() {
-	initializePlayback();
-	playBuffer();
-	closePlayback();
-	return 0;
-}
-
-
-
-
 
 void AudioRecorder::setupFormat() {
 	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
@@ -66,6 +37,79 @@ void AudioRecorder::setupFormat() {
 	return;
 
 }
+
+int AudioRecorder::waitOnHeader(WAVEHDR* wh, char cDit) {
+	long	lTime = 0;
+	// wait for whatever is being played, to finish. Quit after 10 seconds.
+	for (; ; ) {
+		if (wh->dwFlags & WHDR_DONE) return(0);
+		// idle for a bit so as to free CPU
+		Sleep(100L);
+		lTime += 100;
+		if (lTime >= MAX_RECORDING_LEN) {
+			cerr << "waitOnHeader(...) timed out!" << endl;
+			return(-1);  // timeout period
+		}
+		if (cDit) cout << cDit;
+	}
+}
+
+int AudioRecorder::prepareBuffer(int seconds) {
+	if (recBuf != nullptr) {
+		cerr << "ERROR! Trying to rewrite recBuf!" << endl;
+		return -1;
+	}
+
+	recBufSize = seconds * recSamplesPerSencod;
+	recBuf = (short*)malloc(recBufSize * sizeof(short));
+	if (recBuf == nullptr) {
+		cerr << "ERROR! Could not allocate memory for recBuf!" << endl;
+		return -1;
+	}
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+int AudioRecorder::recordAudio(uint32_t seconds) {
+	prepareBuffer(seconds);
+
+	initializeRecording();
+	recordBuffer();
+	closeRecordring();
+	return 0;
+}
+
+int AudioRecorder::replayAudio() {
+	if (recBuf == nullptr) {
+		cerr << "ERROR! Unable to replay recBuf (nullptr)" << endl;
+		return -1;
+	}
+
+	initializePlayback();
+	playBuffer();
+	closePlayback();
+	return 0;
+}
+
+void AudioRecorder::clearBuffer() {
+	if (recBuf != nullptr) {
+		free(recBuf);
+		recBuf = nullptr;
+		recBufSize = 0;
+	}
+}
+
+
+
+
 
 int AudioRecorder::initializeRecording() {
 	MMRESULT rc;
@@ -99,19 +143,10 @@ int AudioRecorder::recordBuffer() {
 	MMRESULT	mmErr;
 	int		rc;
 
-	printf("Recording now.....");
-
 	// stop previous recording (just in case)
 	waveInReset(hWaveIn);   // is this good?
 
-	// get the header ready for recording.  This should not be needed here AND in init.
-	//waveHeaderIn.lpData = (char*)recBuf;
-	//waveHeaderIn.dwBufferLength = recBufSize * sizeof(short);
-	//rc = waveInPrepareHeader(hWaveIn, &waveHeaderIn, sizeof(WAVEHDR));
-	//if (rc) {
-	//	cerr << "Failed preparing WAVEHDR, error x." << rc << endl;
-	//	return(-1);
-	//}
+
 	waveHeaderIn.dwFlags &= ~(WHDR_BEGINLOOP | WHDR_ENDLOOP);
 
 	// Give the buffer to the recording device to fill.
@@ -120,7 +155,7 @@ int AudioRecorder::recordBuffer() {
 	mmErr = waveInStart(hWaveIn);
 
 	// wait for completion
-	rc = waitOnHeader(&waveHeaderIn, '.');
+	rc = waitOnHeader(&waveHeaderIn);
 	// stop input
 	waveInStop(hWaveIn);
 	return(rc);
@@ -205,19 +240,4 @@ void AudioRecorder::closePlayback() {
 
 
 
-int AudioRecorder::waitOnHeader(WAVEHDR* wh, char cDit) {
-	long	lTime = 0;
-	// wait for whatever is being played, to finish. Quit after 10 seconds.
-	for (; ; ) {
-		if (wh->dwFlags & WHDR_DONE) return(0);
-		// idle for a bit so as to free CPU
-		Sleep(100L);
-		lTime += 100;
-		if (lTime >= 30000) {
-			cerr << "waitOnHeader(...) timed out!" << endl;
-			return(-1);  // timeout period
-		}
-		if (cDit) printf("%c", cDit);
-	}
-}
 

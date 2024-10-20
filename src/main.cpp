@@ -19,9 +19,17 @@ int	main(int argc, char *argv[]) {
 	AudioRecorder aRec = AudioRecorder(44200, 16);
 	std::cout << "Recording audio: " << std::endl;
 	aRec.recordAudio(5);
+	short* buf = aRec.getBuffer();
+	uint32_t bufLen = aRec.getBufferSize();
 
-	std::cout << "Replaying audio: " << std::endl;
-	aRec.replayAudio();
+
+	short* newBuf = (short*)malloc(bufLen * sizeof(short));
+	memcpy(newBuf, buf, bufLen * sizeof(short));
+
+
+	AudioRecorder aReplayer = AudioRecorder(44200, 16);
+	aReplayer.setBuffer(newBuf, bufLen);
+	aReplayer.replayAudio();
 
 	return 0;
 #endif
