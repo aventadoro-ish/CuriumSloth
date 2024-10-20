@@ -16,7 +16,7 @@ Details: Testing mainline for Windows sound API
 int	main(int argc, char *argv[]) {
 
 #if true
-	AudioRecorder aRec = AudioRecorder(8000, 16);
+	AudioRecorder aRec = AudioRecorder(44200, 16);
 	std::cout << "Recording audio: " << std::endl;
 	aRec.recordAudio(5);
 
