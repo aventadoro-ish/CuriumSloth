@@ -7,9 +7,33 @@ Details: Testing mainline for Windows sound API
 #include "sound.h"
 #include <stdio.h>
 #include <windows.h>
+#include <iostream>
 
-int	main(int argc, char *argv[])
-{
+#include "CmS_Sound.h"
+
+
+
+int	main(int argc, char *argv[]) {
+
+#if true
+	AudioRecorder aRec = AudioRecorder(44200, 16);
+	std::cout << "Recording audio: " << std::endl;
+	aRec.recordAudio(5);
+	short* buf = aRec.getBuffer();
+	uint32_t bufLen = aRec.getBufferSize();
+
+
+	short* newBuf = (short*)malloc(bufLen * sizeof(short));
+	memcpy(newBuf, buf, bufLen * sizeof(short));
+
+
+	AudioRecorder aReplayer = AudioRecorder(44200, 16);
+	aReplayer.setBuffer(newBuf, bufLen);
+	aReplayer.replayAudio();
+
+	return 0;
+#endif
+
 	extern short iBigBuf[];												// buffer
 	extern long  lBigBufSize;											// total number of samples
 	short* iBigBufNew = (short*)malloc(lBigBufSize*sizeof(short));		// buffer used for reading recorded sound from file
