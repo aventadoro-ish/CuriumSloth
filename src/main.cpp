@@ -1,11 +1,11 @@
- /* main.cpp : terminal based ui for a messaging system
-  * Date: Oct 2024
-  * Author:
-  *         Mat Regentov
-  *         Besart Kalezic
-  *         Gobind Matharu
-  */
- 
+/* main.cpp : terminal based ui for a messaging system
+ * Date: Oct 2024
+ * Author:
+ *         Mat Regentov
+ *         Besart Kalezic
+ *         Gobind Matharu
+ */
+
 #include <iostream>
 #include <queue>
 #include <string>
@@ -19,6 +19,7 @@ void playAudio();
 void queueMessage();
 void displayQueue();
 void communicationSettings();
+void runTestSound();
 
 // Global message queue definition
 queue<string> messageQueue;
@@ -32,27 +33,28 @@ int main() {
         choice = getChoice(); // Get the user's choice (from terminal.h)
 
         switch (choice) {
-            case 1:
-                recordAudio();
-                break;
-            case 2:
-                playAudio();
-                break;
-            case 3:
-                queueMessage();
-                break;
-            case 4:
-                displayQueue();
-                break;
-            case 5:
-                communicationSettings();
-                break;
-            case 0:
-                running = false; // Exit the loop
-                printf("Exiting the program. Goodbye!\n");
-                break;
-            default:
-                printf("Invalid choice. Please try again.\n");
+        case 1:
+            // recordAudio();
+            runTestSound();
+            break;
+        case 2:
+            playAudio();
+            break;
+        case 3:
+            queueMessage();
+            break;
+        case 4:
+            displayQueue();
+            break;
+        case 5:
+            communicationSettings();
+            break;
+        case 0:
+            running = false; // Exit the loop
+            printf("Exiting the program. Goodbye!\n");
+            break;
+        default:
+            printf("Invalid choice. Please try again.\n");
         }
     }
 

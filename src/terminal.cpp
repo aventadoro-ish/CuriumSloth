@@ -21,6 +21,6 @@ void displayMenu() {
 // Function to get the user's choice
 int getChoice() {
     int choice;
-    scanf("%d", &choice);
+    scanf_s("%d", &choice);
     return choice;
 }
