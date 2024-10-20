@@ -8,16 +8,22 @@
 
 class AudioRecorder {
 private:
-	WAVEFORMATEX	waveFormat;			/* WAVEFORMATEX structure for reading in the WAVE fmt chunk */
 	HWAVEOUT		hWaveOut;				/* Handle of opened WAVE Out and In device */
-	HWAVEIN			hWaveIn;
 	WAVEHDR			waveHeader[NFREQUENCIES];	/* WAVEHDR structures - 1 per buffer */
 	WAVEHDR			waveHeaderSilence;
+	WAVEHDR			waveHeaderOut;
+
+
+	WAVEFORMATEX	waveFormat;			/* WAVEFORMATEX structure for reading in the WAVE fmt chunk */
+	
+	HWAVEIN			hWaveIn;
 	WAVEHDR			waveHeaderIn;
+
 
 
 	uint32_t recLength = 1;
 	uint32_t recSamplesPerSencod = 8000;
+	uint16_t recBitsPerSample = 8;
 	short* recBuf = nullptr;
 	uint32_t recBufSize = 0;
 
@@ -54,17 +60,30 @@ private:
 	/// <returns> 0 if success, -1 if timeout</returns>
 	int waitOnHeader(WAVEHDR* wh, char cDit);
 
+	void closeRecordring();
 
+	/* ------------- Replay functions ----------------- */
 
+	int initializePlayback();
+
+	int playBuffer();
+
+	void closePlayback();
 
 public:
 
+	AudioRecorder(
+		uint32_t samplesPerSecond = 8000,
+		uint16_t bitsPerSample = 8);
+	~AudioRecorder();
+
 	/// <summary>
-	/// Record audio with given parameters. Cannot overwrite the member buffer
+	/// Record audio of given length. Cannot overwrite the member buffer
 	/// </summary>
 	/// <param name="seconds">number of seconds to recrod for</param>
-	/// <param name="samplesPerSecond">samples per second to record</param>
 	/// <returns>0 if success</returns>
-	int recordAudio(uint32_t seconds, uint32_t samplesPerSecond);
+	int recordAudio(uint32_t seconds);
+
+	int replayAudio();
 };
 

@@ -10,7 +10,7 @@
 // CONSTANTS - SET RECORDING TIME AND RATE
 #define	DEFAULT_NSAMPLES	4000	
 #define MIN_BUFSIZE			1000
-#define RECORD_TIME			6		// seconds to record from mic
+#define RECORD_TIME			5		// seconds to record from mic
 #define SAMPLES_SEC			8000	// number of samples per second
 #define	NFREQUENCIES		96		// number of frequencies used - leave this alone
 
