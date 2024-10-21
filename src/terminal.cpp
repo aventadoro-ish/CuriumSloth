@@ -1,8 +1,8 @@
- /* terminal.cpp: header file for terminal.cpp
-  * Date: Oct 2024
-  * Version: 1.0
-  * Author:  Gobind Matharu
-  */
+/* terminal.cpp: header file for terminal.cpp
+ * Date: Oct 2024
+ * Author:  Gobind Matharu
+ */
+
 #include "terminal.h"
 
 // Function to display the main menu (Home/Receive/Exit)

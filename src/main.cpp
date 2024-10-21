@@ -127,7 +127,6 @@ void queueMessage() {
 // Function to display queued messages
 void displayQueue() {
     printf("Display queue (placeholder)...\n");
-    // In actual implementation, you can modify settings like bitrate, etc.
 }
 
 // Placeholder for communication settings function
