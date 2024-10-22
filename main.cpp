@@ -47,7 +47,7 @@ int main() {
 
                 switch (homeChoice) {
                 case 1:
-                    recordAudio();  // Record Audio (calls the function from soundTest.cpp)
+                    recordAudio();
                     break;
                 case 2:
                     playAudio();  // Play Audio
@@ -109,7 +109,7 @@ int main() {
 
 // Placeholder function for recording audio
 void recordAudio() {
-    printf("Recording audio (placeholder)...\n");
+    soundTest();
     // In actual implementation, you'd capture audio here.
 }
 

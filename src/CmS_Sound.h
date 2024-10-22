@@ -143,3 +143,6 @@ public:
 
 };
 
+
+int	soundTest();
+
