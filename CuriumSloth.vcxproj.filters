@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\soundTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\CmS_Sound.cpp">
@@ -25,6 +25,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="terminal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

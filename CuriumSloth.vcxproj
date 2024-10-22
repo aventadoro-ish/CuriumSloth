@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>${ProjectDir}\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\gobind\Documents\CuriumSloth\src;${ProjectDir}\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,8 +128,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="src\CmS_Sound.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\soundTest.cpp" />
     <ClCompile Include="src\sound.cpp" />
     <ClCompile Include="terminal.cpp" />
   </ItemGroup>

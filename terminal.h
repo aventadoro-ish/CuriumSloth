@@ -9,7 +9,7 @@
 #include <cstdio>  // For printf and scanf
 
  // Function prototypes for terminal operations
-void displayMenu();
+void displayMainMenu();
 void displayHomeMenu();
 void displayReceiveMenu();
 int getChoice();

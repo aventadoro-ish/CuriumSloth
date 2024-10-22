@@ -12,7 +12,7 @@ Details: Testing mainline for Windows sound API
 
 
 
-int	main(int argc, char *argv[]) {
+int	soundTest(int argc, char *argv[]) {
 
 	AudioRecorder aRec = AudioRecorder(44200, 16);
 	std::cout << "Recording audio for 10 seconds: " << std::endl;
