@@ -24,12 +24,18 @@
     <ClCompile Include="src\sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="terminal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\CmS_Sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="terminal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

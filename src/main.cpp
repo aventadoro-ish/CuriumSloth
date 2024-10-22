@@ -4,7 +4,6 @@ Date: Updated 2022
 Details: Testing mainline for Windows sound API
 */
 
-#include "sound.h"
 #include <stdio.h>
 #include <windows.h>
 #include <iostream>
@@ -15,10 +14,9 @@ Details: Testing mainline for Windows sound API
 
 int	main(int argc, char *argv[]) {
 
-#if true
 	AudioRecorder aRec = AudioRecorder(44200, 16);
-	std::cout << "Recording audio: " << std::endl;
-	aRec.recordAudio(5);
+	std::cout << "Recording audio for 10 seconds: " << std::endl;
+	aRec.recordAudio(10);											// record for 10 seconds
 	short* buf = aRec.getBuffer();
 	uint32_t bufLen = aRec.getBufferSize();
 
@@ -29,70 +27,56 @@ int	main(int argc, char *argv[]) {
 
 	AudioRecorder aReplayer = AudioRecorder(44200, 16);
 	aReplayer.setBuffer(newBuf, bufLen);
+	std::cout << "Replaying the recorded audio: " << std::endl; 
 	aReplayer.replayAudio();
 
-	return 0;
-#endif
+	free(newBuf);
 
-	extern short iBigBuf[];												// buffer
-	extern long  lBigBufSize;											// total number of samples
-	short* iBigBufNew = (short*)malloc(lBigBufSize*sizeof(short));		// buffer used for reading recorded sound from file
-
+	// Save audio to a file
 	char save;
-	char replay;
-	char c;																// used to flush extra input
 	FILE* f;
 
-	// initialize playback and recording
-	InitializePlayback();
-	InitializeRecording();
+	std::cout << "Would you like to save your audio recording? (y/n): ";
+	std::cin >> save;
 
-	// start recording
-	RecordBuffer(iBigBuf, lBigBufSize);
-	CloseRecording();
+	if (save == 'y' || save == 'Y') {
+        fopen_s(&f, "C:\\myfiles\\recording.dat", "wb");
+        if (!f) {
+            std::cerr << "Unable to open C:\\myfiles\\recording.dat\n";
+            return 0;
+        }
+        std::cout << "Writing to sound file ...\n";
+        fwrite(buf, sizeof(short), bufLen, f);
+        fclose(f);
+    }
 
-	// playback recording 
-	printf("\nPlaying recording from buffer\n");
-	PlayBuffer(iBigBuf, lBigBufSize);
-	ClosePlayback();
+    // Replay audio from file
+    char replay;
+    std::cout << "Would you like to replay the saved audio recording from the file? (y/n): ";
+    std::cin >> replay;
 
-	// save audio recording  
-	printf("Would you like to save your audio recording? (y/n): "); 
-	scanf_s("%c", &save, 1);
-	while ((c = getchar()) != '\n' && c != EOF) {}								// Flush other input
-	if ((save == 'y') || (save == 'Y')) {
-		/* Open input file */
-		fopen_s(&f, "C:\\myfiles\\recording.dat", "wb");
-		if (!f) {
-			printf("unable to open %s\n", "C:\\myfiles\\recording.dat");
-			return 0;
-		}
-		printf("Writing to sound file ...\n");
-		fwrite(iBigBuf, sizeof(short), lBigBufSize, f);
-		fclose(f);
-	}
+    if (replay == 'y' || replay == 'Y') {
+        fopen_s(&f, "C:\\myfiles\\recording.dat", "rb");
+        if (!f) {
+            std::cerr << "Unable to open C:\\myfiles\\recording.dat\n";
+            return 0;
+        }
 
-	// replay audio recording from file -- read and store in buffer, then use playback() to play it
-	printf("Would you like to replay the saved audio recording from the file? (y/n): ");
-	scanf_s("%c", &replay, 1);
-	while ((c = getchar()) != '\n' && c != EOF) {}								// Flush other input
-	if ((replay == 'y') || (replay == 'Y')) {
-		/* Open input file */
-		fopen_s(&f, "C:\\myfiles\\recording.dat", "rb");
-		if (!f) {
-			printf("unable to open %s\n", "C:\\myfiles\\recording.dat");
-			return 0;
-		}
-		printf("Reading from sound file ...\n");
-		fread(iBigBufNew, sizeof(short), lBigBufSize, f);				// Record to new buffer iBigBufNew
-		fclose(f);
-		InitializePlayback();
-		printf("\nPlaying recording from saved file ...\n");
-		PlayBuffer(iBigBufNew, lBigBufSize);
-		ClosePlayback();
-	}
-	
-	printf("\n");
-	system("pause");
-	return(0);
+        // Allocate memory for a new buffer to read the saved data
+        short* fileBuf = (short*)malloc(bufLen * sizeof(short));
+        fread(fileBuf, sizeof(short), bufLen, f);
+        fclose(f);
+
+        // Play the sound from the file buffer
+        aReplayer.setBuffer(fileBuf, bufLen);
+        std::cout << "Replaying audio from the saved file: " << std::endl;
+        aReplayer.replayAudio();
+
+        // Free the file buffer
+        free(fileBuf);
+    }
+
+    std::cout << "\n";
+    system("pause");
+    return 0;
 }

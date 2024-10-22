@@ -131,10 +131,12 @@
     <ClCompile Include="src\CmS_Sound.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\sound.cpp" />
+    <ClCompile Include="terminal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CmS_Sound.h" />
     <ClInclude Include="src\sound.h" />
+    <ClInclude Include="terminal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
