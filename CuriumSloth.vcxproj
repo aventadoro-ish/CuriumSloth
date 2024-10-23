@@ -129,7 +129,6 @@
   <ItemGroup>
     <ClCompile Include="CmS_Sound.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Queue.cpp" />
     <ClCompile Include="src\sound.cpp" />
   </ItemGroup>
   <ItemGroup>

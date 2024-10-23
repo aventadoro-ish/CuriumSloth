@@ -24,23 +24,41 @@ int	main(int argc, char *argv[]) //change to test audio bring it into diagnostic
 	char c;																// used to flush extra input
 	FILE* f;
 	
+	//-----------------------------------Queue Code with Template
+	Queue<int> q;
+	Node<int>* p;
 
-	QueueGen<int> q;  // Create a queue of integers
+	// Initialize the queue
+	q.inItQueue();
 
-	// Enqueue three elements into the queue
-	q.enqueue(10);
-	q.enqueue(20);
-	q.enqueue(30);
+	// Add nodes with values from 1 to 10 to the queue
+	for (int i = 1; i <= 10; i++) {
+		p = new Node<int>();  // Allocate new node
+		p->Data = i;          // Set the data of the node
+		q.addToQueue(p);      // Add to the queue
+	}
 
-	// Print the front element (should print 10)
-	cout << "Front element: " << q.peek() << endl;
+	// Print the queue before deletion
+	std::cout << "Queue before deletion of 7:" << std::endl;
+	q.traverse(q.returnHead(), visit);
 
-	// Dequeue the front element and print the new front (should print 20)
-	q.dequeue();
-	cout << "Front element after dequeue: " << q.peek() << endl;
+	// Value to be deleted
+	int valueToDelete = 7;
 
-	// Print the current size of the queue (should print 2)
-	cout << "Queue size: " << q.getSize() << endl;
+	// Call deleteR to remove the node with the value 7
+	q.deleteR(q.returnHead(), q.returnHead()->pNext, valueToDelete);
+
+	// Print the queue after deletion
+	std::cout << "\nQueue after deletion of 7:" << std::endl;
+	q.traverse(q.returnHead(), visit);
+
+	p = new Node<int>();  // Allocate new node
+	p->Data = 7;          // Set the data of the node
+	q.addToQueue(p);
+	std::cout << "\nQueue after adding of 7:" << std::endl;
+	q.traverse(q.returnHead(), visit);
+
+	//----------------------------------------Queue Code
 
 	// initialize playback and recording
 	InitializePlayback();
