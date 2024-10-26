@@ -5,10 +5,13 @@ Details: Testing mainline for Windows sound API
 */
 
 #include <stdio.h>
-#include <windows.h>
 #include <iostream>
-
 #include "CmS_Sound.h"
+
+
+#if defined(_WIN32)
+#include <windows.h>
+
 
 
 
@@ -80,3 +83,13 @@ int	soundTest() {
     system("pause");
     return 0;
 }
+
+#elif defined(__linux__)
+int	soundTest() {
+    std::cout << "TODO: IMPLEMENT SOUND TEST FOR LINUX" << std::endl;
+    return 0;
+}
+#else
+
+
+#endif
