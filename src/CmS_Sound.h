@@ -1,6 +1,15 @@
 #pragma once
 
+#ifdef _WIN32
 #include <windows.h>					// Contains WAVEFORMATEX structure
+#elif __linux__
+
+#else
+#error "Platform not supported"
+#endif
+
+
+
 #include <cstdint>
 
 #define	NFREQUENCIES		96		// number of frequencies used - leave this alone
@@ -8,6 +17,8 @@
 
 class AudioRecorder {
 private:
+
+#ifdef _WIN32
 	WAVEFORMATEX	waveFormat;			/* WAVEFORMATEX structure for reading in the WAVE fmt chunk */
 	
 	// recording variables
@@ -18,7 +29,11 @@ private:
 	HWAVEOUT	hWaveOut;				/* Handle of opened WAVE Out device */
 	WAVEHDR		waveHeaderOut;			/* Header of WAVE Out */
 	//WAVEHDR		waveHeader[NFREQUENCIES];	/* WAVEHDR structures - 1 per buffer */
+#elif __linux__
 
+#else
+
+#endif
 
 	uint32_t recSamplesPerSencod = 8000;
 	uint16_t recBitsPerSample = 16;
@@ -27,11 +42,14 @@ private:
 	short* recBuf = nullptr;
 	uint32_t recBufSize = 0;
 
+
+
+#ifdef _WIN32
 	/// <summary>
 	/// Sets up WAVEFORMATEX format of waveFormat member
 	/// </summary>
 	void setupFormat();
-
+	
 	/// <summary>
 	/// Wait for completion of recroding/replay of wh (with MAX_RECORDING_LEN timeout)
 	/// </summary>
@@ -39,6 +57,11 @@ private:
 	/// <param name="cDit">char to put to console while waiting (0 for not printing)</param>
 	/// <returns> 0 if success, -1 if timeout</returns>
 	int waitOnHeader(WAVEHDR* wh, char cDit = 0);
+#elif __linux__
+
+#else
+
+#endif
 
 	/// <summary>
 	/// Allocates memory for recBuf. Checks as to not overwrite the buffer

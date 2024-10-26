@@ -1,7 +1,18 @@
 #include "CmS_Sound.h"
+
+
+
+#ifdef _WIN32
+#include <mmsystem.h>					
 #pragma comment(lib, "Ws2_32.lib")	   // Make sure we are linking against the Ws2_32.lib library
 #pragma comment(lib, "Winmm.lib")      // Make sure we are linking against the Winmm.lib library - some functions/symbols from this library (Windows sound API) are used
-#include <mmsystem.h>					
+#elif __linux__
+
+#else
+#error "Platform not supported"
+#endif
+
+
 #include <math.h>
 
 #include <iostream>
@@ -25,58 +36,6 @@ AudioRecorder::AudioRecorder(
 AudioRecorder::~AudioRecorder() {
 	clearBuffer();
 }
-
-void AudioRecorder::setupFormat() {
-	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
-	waveFormat.nChannels = recNumCh;
-	waveFormat.nSamplesPerSec = recSamplesPerSencod;
-	waveFormat.wBitsPerSample = recBitsPerSample;
-	waveFormat.nBlockAlign = waveFormat.nChannels * (waveFormat.wBitsPerSample / 8);
-	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
-	waveFormat.cbSize = 0;
-	return;
-
-}
-
-int AudioRecorder::waitOnHeader(WAVEHDR* wh, char cDit) {
-	long	lTime = 0;
-	// wait for whatever is being played, to finish. Quit after 10 seconds.
-	for (; ; ) {
-		if (wh->dwFlags & WHDR_DONE) return(0);
-		// idle for a bit so as to free CPU
-		Sleep(100L);
-		lTime += 100;
-		if (lTime >= MAX_RECORDING_LEN) {
-			cerr << "waitOnHeader(...) timed out!" << endl;
-			return(-1);  // timeout period
-		}
-		if (cDit) cout << cDit;
-	}
-}
-
-int AudioRecorder::prepareBuffer(int seconds) {
-	if (recBuf != nullptr) {
-		cerr << "ERROR! Trying to rewrite recBuf!" << endl;
-		return -1;
-	}
-
-	recBufSize = seconds * recSamplesPerSencod;
-	recBuf = (short*)malloc(recBufSize * sizeof(short));
-	if (recBuf == nullptr) {
-		cerr << "ERROR! Could not allocate memory for recBuf!" << endl;
-		return -1;
-	}
-
-	return 0;
-}
-
-
-
-
-
-
-
-
 
 int AudioRecorder::recordAudio(uint32_t seconds) {
 	prepareBuffer(seconds);
@@ -104,6 +63,55 @@ void AudioRecorder::clearBuffer() {
 		free(recBuf);
 		recBuf = nullptr;
 		recBufSize = 0;
+	}
+}
+
+int AudioRecorder::prepareBuffer(int seconds) {
+	if (recBuf != nullptr) {
+		cerr << "ERROR! Trying to rewrite recBuf!" << endl;
+		return -1;
+	}
+
+	recBufSize = seconds * recSamplesPerSencod;
+	recBuf = (short*)malloc(recBufSize * sizeof(short));
+	if (recBuf == nullptr) {
+		cerr << "ERROR! Could not allocate memory for recBuf!" << endl;
+		return -1;
+	}
+
+	return 0;
+}
+
+/*****************************************************************************
+ * 							WINDOWS IMPLEMENTATION							 *
+ *****************************************************************************/
+#if defined(_WIN32)
+
+void AudioRecorder::setupFormat() {
+	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+	waveFormat.nChannels = recNumCh;
+	waveFormat.nSamplesPerSec = recSamplesPerSencod;
+	waveFormat.wBitsPerSample = recBitsPerSample;
+	waveFormat.nBlockAlign = waveFormat.nChannels * (waveFormat.wBitsPerSample / 8);
+	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
+	waveFormat.cbSize = 0;
+	return;
+
+}
+
+int AudioRecorder::waitOnHeader(WAVEHDR* wh, char cDit) {
+	long	lTime = 0;
+	// wait for whatever is being played, to finish. Quit after 10 seconds.
+	for (; ; ) {
+		if (wh->dwFlags & WHDR_DONE) return(0);
+		// idle for a bit so as to free CPU
+		Sleep(100L);
+		lTime += 100;
+		if (lTime >= MAX_RECORDING_LEN) {
+			cerr << "waitOnHeader(...) timed out!" << endl;
+			return(-1);  // timeout period
+		}
+		if (cDit) cout << cDit;
 	}
 }
 
@@ -235,10 +243,29 @@ void AudioRecorder::closePlayback() {
 
 
 
+#elif defined(__linux__)
+/*****************************************************************************
+ * 							LINUX IMPLEMENTATION							 *
+ *****************************************************************************/
 
+int AudioRecorder::initializeRecording() {
+	return -1;
+}
+int AudioRecorder::recordBuffer() {
+	return -1;
+}
+void AudioRecorder::closeRecordring() {
+}
 
+int AudioRecorder::initializePlayback() {
+	return -1;
+}
+int AudioRecorder::playBuffer() {
+	return -1;
+}
+void AudioRecorder::closePlayback() {
+}
 
+#else
 
-
-
-
+#endif

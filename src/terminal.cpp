@@ -39,9 +39,26 @@ void displayReceiveMenu() {
     printf("Enter your choice: ");
 }
 
+
+#if defined(_WIN32)
 // Function to get the user's choice
 int getChoice() {
     int choice;
     scanf_s("%d", &choice);
     return choice;
 }
+#elif defined(__linux__)
+// Function to get the user's choice
+int getChoice() {
+    int choice;
+    scanf("%d", &choice);
+    return choice;
+}
+#else
+// Function to get the user's choice
+int getChoice() {
+    int choice;
+    scanf_s("%d", &choice);
+    return choice;
+}
+#endif
