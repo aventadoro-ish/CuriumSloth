@@ -24,10 +24,13 @@
     <ClCompile Include="src\sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="terminal.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\terminal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\QueueTemp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,7 +41,10 @@
     <ClInclude Include="src\CmS_Sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="terminal.h">
+    <ClInclude Include="src\terminal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
