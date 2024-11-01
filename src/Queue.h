@@ -1,3 +1,10 @@
+/* Queue.h: Queue header file
+ * Date: Oct 2024
+ * Author:
+ *
+ *         Besart Kalezic
+ *
+ */
 #ifndef QUEUE_H
 #define QUEUE_H
 

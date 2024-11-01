@@ -1,3 +1,11 @@
+/* QueueTemp.cpp : Queue implementation using templates
+ * Date: Oct 2024
+ * Author:
+ *         
+ *         Besart Kalezic
+ *         
+ */
+
 #include <iostream>  
 using namespace std;  // Use the standard namespace to avoid writing 'std::' before standard functions
 
