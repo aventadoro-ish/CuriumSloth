@@ -7,6 +7,8 @@
 #define TERMINAL_H
 
 #include <cstdio>  // For printf and scanf
+#include <stdio.h> // For scanf_s
+#include <stdlib.h>
 
  // Function prototypes for terminal operations
 void displayMainMenu();

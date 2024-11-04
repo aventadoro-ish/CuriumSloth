@@ -13,6 +13,9 @@ Details: Testing mainline for Windows sound API
 #include <windows.h>
 
 
+#ifndef _MSC_VER
+#define fopen_s(pFile,filename,mode) ((*(pFile))=fopen((filename),(mode)))==NULL
+#endif
 
 
 int	soundTest() {
@@ -44,6 +47,7 @@ int	soundTest() {
 
 	if (save == 'y' || save == 'Y') {
         fopen_s(&f, "C:\\myfiles\\recording.dat", "wb");
+
         if (!f) {
             std::cerr << "Unable to open C:\\myfiles\\recording.dat\n";
             return 0;

@@ -44,10 +44,16 @@ void displayReceiveMenu() {
 // Function to get the user's choice
 int getChoice() {
     int choice;
+
+#ifdef _MSC_VER // for Visual Studio
     scanf_s("%d", &choice);
+#else           // for VS Code - scanf_s does not exist in g++.exe
+    scanf("%d", &choice);
+#endif
     return choice;
 }
 #elif defined(__linux__)
+
 // Function to get the user's choice
 int getChoice() {
     int choice;
