@@ -34,6 +34,11 @@
             },
             "linux": {
                 "command": "/usr/bin/g++",
+                "args": [
+                    "-g", "${workspaceFolder}/src/*.cpp",
+                    "-o", "${workspaceFolder}/output/CuriumSloth.elf",
+                    "-I", "${fileDirname}"
+                ],
                 "options": {
                     "cwd": "/usr/bin"
                 }
@@ -43,6 +48,7 @@
             "type": "shell",
             "label": "Build and Run Program",
             "dependsOn": "C/C++: g++ build active file",
+            "command": "${env:PlatformSpecificCommand}",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -52,7 +58,7 @@
                 "command": "${workspaceFolder}/output/CuriumSloth.exe"
             },
             "linux": {
-                "command": "${workspaceFolder}/output/CuriumSloth"
+                "command": "${workspaceFolder}/output/CuriumSloth.elf"
             },
             "presentation": { 
                 "reveal": "always",
