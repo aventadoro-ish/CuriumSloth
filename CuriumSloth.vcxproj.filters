@@ -21,24 +21,18 @@
     <ClCompile Include="src\CmS_Sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\sound.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="terminal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\terminal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\sound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\CmS_Sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="terminal.h">
+    <ClInclude Include="src\terminal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

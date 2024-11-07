@@ -128,16 +128,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="src\CmS_Sound.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\soundTest.cpp" />
-    <ClCompile Include="src\sound.cpp" />
-    <ClCompile Include="terminal.cpp" />
+    <ClCompile Include="src\terminal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CmS_Sound.h" />
-    <ClInclude Include="src\sound.h" />
-    <ClInclude Include="terminal.h" />
+    <ClInclude Include="src\terminal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -61,10 +61,10 @@
             "linux": {
                 "command": "${workspaceFolder}/output/CuriumSloth.elf"
             },
-            "presentation": { 
-                "reveal": "always",
-                "panel": "new"
-            }
+            // "presentation": { 
+            //     "reveal": "always",
+            //     "panel": "new"
+            // }
         }
     ]
 }

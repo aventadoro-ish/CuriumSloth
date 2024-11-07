@@ -27,6 +27,10 @@
 #include <math.h>
 #include <iostream>
 
+
+#include <cstdlib>
+#include <stdlib.h>
+
 using namespace std;
 
 
@@ -82,10 +86,14 @@ int AudioRecorder::prepareBuffer(int seconds) {
 		return -1;
 	}
 
-
 #ifdef _WIN32
 	recBufSize = seconds * recSamplesPerSencod;
+
 	recBuf = (AudioBufT*)malloc(recBufSize * sizeof(AudioBufT));
+	// recBuf = (short*)malloc(recBufSize * sizeof(short) + 16);
+	// recBuf = (short*)(((long int)recBuf / 16) * 16);
+	cout << "recBuf address " << hex << recBuf << endl;
+	cout << "sizeof(AudioBufT)=" << sizeof(short) << endl; 
 #elif __linux__
 
 	recBufSize = (seconds * 4 * BYTES_PER_HW_BUF);       		// Nuber of bytes in the buffer used to store the complete playback/capture data
@@ -155,11 +163,13 @@ int AudioRecorder::initializeRecording() {
 	rc = waveInUnprepareHeader(hWaveIn, &waveHeaderIn, sizeof(WAVEHDR));
 
 	// prepare the buffer header for use later on
+	ZeroMemory(&waveHeaderIn, sizeof(WAVEHDR)); // Ensure all fields are zeroed
 	waveHeaderIn.lpData = (char*)recBuf;
-	waveHeaderIn.dwBufferLength = recBufSize * sizeof(short) - 1;
+	// waveHeaderIn.dwBufferLength = recBufSize * sizeof(short) - 1;
+	waveHeaderIn.dwBufferLength = recBufSize * sizeof(short);
 	rc = waveInPrepareHeader(hWaveIn, &waveHeaderIn, sizeof(WAVEHDR));
 	if (rc) {
-		cerr << "Failed preparing input WAVEHDR, error x." << rc << endl;
+		cerr << "Failed preparing input WAVEHDR, error " << rc << endl;
 		return(-1);
 	}
 
@@ -227,13 +237,15 @@ int AudioRecorder::playBuffer() {
 
 	// stop previous note (just in case)
 	waveOutReset(hWaveOut);   // is this good?
+	ZeroMemory(&waveHeaderOut, sizeof(WAVEHDR)); // Ensure all fields are zeroed
+
 
 	// get the header ready for playback
 	waveHeaderOut.lpData = (char*)recBuf;
 	waveHeaderOut.dwBufferLength = recBufSize * sizeof(short);
 	rc = waveOutPrepareHeader(hWaveOut, &waveHeaderOut, sizeof(WAVEHDR));
 	if (rc) {
-		printf("Failed preparing WAVEHDR, error 0x%x.", rc);
+		cout << "Failed preparing WAVEHDR, error " << rc << endl;
 		return(0);
 	}
 	waveHeaderOut.dwFlags &= ~(WHDR_BEGINLOOP | WHDR_ENDLOOP);

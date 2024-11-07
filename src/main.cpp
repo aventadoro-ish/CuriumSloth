@@ -31,14 +31,6 @@ void manageDownloads();
 queue<string> messageQueue;
 
 int main() {
-    AudioRecorder ar = AudioRecorder();
-    cout << "Recording" << endl;
-    ar.recordAudio(5);
-    cout << "Replaying" << endl;
-    ar.replayAudio();
-
-    return 0;
-
     int mainChoice, homeChoice, receieveChoice;
     bool running = true;
 
