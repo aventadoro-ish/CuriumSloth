@@ -24,7 +24,17 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="src\terminal.cpp">
+=======
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\terminal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\QueueTemp.cpp">
+>>>>>>> 80702e605ac3ad5504e5085a0ad4ecf8ad40a162
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -33,6 +43,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\terminal.h">
+<<<<<<< HEAD
+=======
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Queue.h">
+>>>>>>> 80702e605ac3ad5504e5085a0ad4ecf8ad40a162
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

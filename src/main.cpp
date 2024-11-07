@@ -11,6 +11,7 @@
 #include <string>
 #include "terminal.h"
 #include "CmS_Sound.h"
+#include "queue.h"
 
 using namespace std;
 
@@ -121,8 +122,8 @@ void playAudio() {
 
 // Function to queue a message
 void queueMessage() {
-    printf("Queue message (placeholder)...\n");
-}
+    testQueue();
+}   // In actual implementation, you'd add a message to the queue.
 
 // Function to display queued messages
 void displayQueue() {
