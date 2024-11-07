@@ -37,7 +37,8 @@
                 "args": [
                     "-g", "${workspaceFolder}/src/*.cpp",
                     "-o", "${workspaceFolder}/output/CuriumSloth.elf",
-                    "-I", "${fileDirname}"
+                    "-I", "${fileDirname}",
+                    "-lasound"
                 ],
                 "options": {
                     "cwd": "/usr/bin"

@@ -2,7 +2,11 @@
 
 #ifdef _WIN32
 #include <windows.h>					// Contains WAVEFORMATEX structure
+typedef short AudioBufT;
+
 #elif __linux__
+#include <alsa/asoundlib.h>		// At terminal need to install alsa headers to /usr/include/alsa via installing: $ sudo apt-get install libasound2-dev   
+typedef char AudioBufT;
 
 #else
 #error "Platform not supported"
@@ -30,6 +34,17 @@ private:
 	WAVEHDR		waveHeaderOut;			/* Header of WAVE Out */
 	//WAVEHDR		waveHeader[NFREQUENCIES];	/* WAVEHDR structures - 1 per buffer */
 #elif __linux__
+	// Playback vars
+	snd_pcm_t* pcm_handle_Playback; 									// Handle for a PCM device (playback)
+	snd_pcm_stream_t stream_Playback = SND_PCM_STREAM_PLAYBACK; 		// *** Playback stream ***
+	snd_pcm_hw_params_t* hwparams_Playback;								// Structure used to specify config properties of hardware/stream
+	char* pcm_name_Playback = "default"; // "hw:0:0"; //"hw:0,1"; //"default";		// Name of PCM device (e.g. "hw:0,0" or "default"). First # is number of soundcard, second # is the device. Use $ aplay -L  or $arecord -L to get names of available devices 
+	
+	// Capture (Record) vars
+	snd_pcm_t* pcm_handle_Capture; 										// Handle for a PCM device (capture)
+	snd_pcm_stream_t stream_Capture = SND_PCM_STREAM_CAPTURE; 			// *** Capture stream ***
+	snd_pcm_hw_params_t* hwparams_Capture;								// Structure used to specify config properties of hardware/stream
+	char* pcm_name_Capture = "hw:0,0"; //"default";					// Name of PCM device (e.g. "hw:0,0" or "default"). First # is number of soundcard, second # is the device. Use $ aplay -L  or $arecord -L to get names of available devices 
 
 #else
 
@@ -39,7 +54,7 @@ private:
 	uint16_t recBitsPerSample = 16;
 	uint16_t recNumCh = 1;
 
-	short* recBuf = nullptr;
+	AudioBufT* recBuf = nullptr;
 	uint32_t recBufSize = 0;
 
 
@@ -58,6 +73,20 @@ private:
 	/// <returns> 0 if success, -1 if timeout</returns>
 	int waitOnHeader(WAVEHDR* wh, char cDit = 0);
 #elif __linux__
+	int prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream, snd_pcm_hw_params_t** hwparams, char* pcm_name);
+	long readbuf(snd_pcm_t *handle, char *buf, long len, size_t *frames, size_t *max);
+	long writebuf(snd_pcm_t *handle, char *buf, long len, size_t *frames);
+
+	// returns the number of 
+	int getSampleRate() {
+
+	}
+
+	int getBytesPerFrame() {
+
+	}
+
+
 
 #else
 
@@ -142,7 +171,7 @@ public:
 	/// </summary>
 	/// <returns>recBuf pointer (may be nullptr)</returns>
 	short* getBuffer() {
-		return recBuf;
+		return (short*)recBuf;
 	}
 
 	/// <summary>
@@ -150,7 +179,16 @@ public:
 	/// </summary>
 	/// <returns>buffer size (0 for empty buffer)</returns>
 	uint32_t getBufferSize() {
+#ifdef _WIN32
 		return recBufSize;
+#elif __linux__
+		// interface returns short* buf, but linux uses char* buf
+		// so linux should report bufSize to be 2 times less
+		return recBufSize / sizeof(short);
+#else
+		return 0;
+#endif
+
 	}
 
 	/// <summary>
@@ -160,7 +198,7 @@ public:
 	/// <param name="buf">Buffer to be replayed</param>
 	/// <param name="bufSize">Size of the buffer</param>
 	void setBuffer(short* buf, uint32_t bufSize) {
-		recBuf = buf;
+		recBuf = (AudioBufT*)buf;
 		recBufSize = bufSize;
 	}
 
