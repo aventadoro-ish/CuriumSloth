@@ -88,12 +88,8 @@ int AudioRecorder::prepareBuffer(int seconds) {
 
 #ifdef _WIN32
 	recBufSize = seconds * recSamplesPerSencod;
-
 	recBuf = (AudioBufT*)malloc(recBufSize * sizeof(AudioBufT));
-	// recBuf = (short*)malloc(recBufSize * sizeof(short) + 16);
-	// recBuf = (short*)(((long int)recBuf / 16) * 16);
-	cout << "recBuf address " << hex << recBuf << endl;
-	cout << "sizeof(AudioBufT)=" << sizeof(short) << endl; 
+	
 #elif __linux__
 
 	recBufSize = (seconds * 4 * BYTES_PER_HW_BUF);       		// Nuber of bytes in the buffer used to store the complete playback/capture data
