@@ -77,17 +77,6 @@ private:
 	long readbuf(snd_pcm_t *handle, char *buf, long len, size_t *frames, size_t *max);
 	long writebuf(snd_pcm_t *handle, char *buf, long len, size_t *frames);
 
-	// returns the number of 
-	int getSampleRate() {
-
-	}
-
-	int getBytesPerFrame() {
-
-	}
-
-
-
 #else
 
 #endif

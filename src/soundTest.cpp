@@ -11,7 +11,7 @@ Details: Testing mainline for Windows sound API
 
 #if defined(_WIN32)
 #include <windows.h>
-
+#endif
 
 #ifndef _MSC_VER
 #define fopen_s(pFile,filename,mode) ((*(pFile))=fopen((filename),(mode)))==NULL
@@ -87,13 +87,3 @@ int	soundTest() {
     system("pause");
     return 0;
 }
-
-#elif defined(__linux__)
-int	soundTest() {
-    std::cout << "TODO: IMPLEMENT SOUND TEST FOR LINUX" << std::endl;
-    return 0;
-}
-#else
-
-
-#endif

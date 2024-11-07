@@ -11,7 +11,7 @@
 #include <string>
 #include "terminal.h"
 #include "CmS_Sound.h"
-#include "queue.h"
+#include "Queue.h"
 
 using namespace std;
 
