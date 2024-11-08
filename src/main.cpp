@@ -11,6 +11,7 @@
 #include <string>
 #include "terminal.h"
 #include "CmS_Sound.h"
+#include "COMPort.h"
 #include "Queue.h"
 
 using namespace std;
@@ -32,6 +33,24 @@ void manageDownloads();
 queue<string> messageQueue;
 
 int main() {
+    COMPort p1 = COMPort();
+    COMPort p2 = COMPort();
+
+    p1.openPort("/dev/pts/2");
+    p2.openPort("/dev/pts/3");
+
+    char* msg = "Hello there!";
+    char* recMsg = (char*)malloc(100 * sizeof(char));
+
+    std::cout << p1.sendMessage(msg, strlen(msg)) << endl;
+    std::cout << p2.receiveMessage(recMsg, 100) << endl;
+
+    recMsg[strlen(recMsg)] = 0;
+
+    std::cout << recMsg << endl;
+
+    return 0;
+
     int mainChoice, homeChoice, receieveChoice;
     bool running = true;
 

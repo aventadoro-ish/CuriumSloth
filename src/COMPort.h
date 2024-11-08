@@ -5,8 +5,7 @@
 #ifdef _WIN32
 // TODO: !!! put Windows-specific stuff here !!! 
 #elif __linux__
-
-// TODO: !!! put Windows-specific stuff here !!! 
+#include <termios.h>	// POSIX terminal control definitions
 
 
 #else
@@ -38,6 +37,8 @@ enum CPErrorCode {
     PORT_IS_OPEN,
     MESSAGE_TOO_LONG,
     TIMED_OUT,
+    WRITE_FAILED,
+    READ_FAILED,
     PARAMETER_ERROR
 };
 
@@ -50,9 +51,9 @@ class COMPort {
 
 #ifdef _WIN32
     // TODO: !!! put Windows-specific member variables here !!! 
-
 #elif __linux__
     // TODO: !!! put Windows-specific member variables here !!! 
+    int fd; // file descriptor for the port
 
 #endif
 
@@ -63,6 +64,14 @@ class COMPort {
 
 #elif __linux__
     // TODO: !!! put Windows-specific method declaration here !!! 
+    CPErrorCode configPort();
+
+    void setParity(termios* options);
+    void setNumStopBits(termios* options);
+
+    CPErrorCode writeToPort(void* buf, unsigned int num_bytes);
+    
+    CPErrorCode readFromPort(void* buf, size_t bufSize);
 
 #endif
 
