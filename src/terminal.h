@@ -14,6 +14,7 @@
 void displayMainMenu();
 void displayHomeMenu();
 void displayReceiveMenu();
+void displayCommunicationSettings();
 int getChoice();
 
 #endif // TERMINAL_H

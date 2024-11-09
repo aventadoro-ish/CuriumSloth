@@ -27,12 +27,15 @@ void communicationSettings();
 void checkIncomingMessages();
 void downloadMessages();
 void manageDownloads();
+void adjustBitrate();
+void setCOMport();
+void setSampleRate();
 
 // Global message queue definition
 queue<string> messageQueue;
 
 int main() {
-    int mainChoice, homeChoice, receieveChoice;
+    int mainChoice, homeChoice, receieveChoice, communicationChoice;
     bool running = true;
 
     while (running) {
@@ -58,9 +61,6 @@ int main() {
                     break;
                 case 4:
                     displayQueue();  // Display Queued Messages
-                    break;
-                case 5:
-                    communicationSettings();  // Communication Settings
                     break;
                 case 0:
                     inHomeMenu = false;  // Go back to the main menu
@@ -96,6 +96,31 @@ int main() {
             }
             break;
         }
+        case 3: {  // Communication selected
+            bool inCommsMenu = true;
+            while (inCommsMenu) {
+                displayCommunicationSettings();  // Show the Receive menu
+                communicationChoice = getChoice();  // Get the user's choice from the Receive menu
+
+                switch (communicationChoice) {
+                case 1:
+					adjustBitrate();  // Adjust Bitrate
+                    break;
+                case 2:
+					setCOMport();  // Set COM Port
+                    break;
+                case 3:
+                    setSampleRate();  // Set Sample Rate
+                    break;
+                case 0:
+                    inCommsMenu = false;  // Go back to the main menu
+                    break;
+                default:
+                    printf("Invalid choice. Please try again.\n");
+                }
+            }
+			break;
+		}
         case 0:
             running = false;  // Exit the loop and terminate the program
             printf("Exiting the program. Goodbye!\n");
@@ -110,8 +135,7 @@ int main() {
 
 // Placeholder function for recording audio
 void recordAudio() {
-    soundTest();
-    // In actual implementation, you'd capture audio here.
+    soundTest(); // Test function recording and playing back audio
 }
 
 // Placeholder function for playing back audio
@@ -147,4 +171,16 @@ void downloadMessages() {
 
 void manageDownloads() {
     printf("Managing downloads (placeholder)...\n");
+}
+
+void adjustBitrate() {
+	printf("Adjusting bitrate (placeholder)...\n");
+}
+
+void setCOMport() {
+	printf("Setting COM port (placeholder)...\n");
+}   
+
+void setSampleRate() {
+	printf("Setting sample rate (placeholder)...\n");
 }
