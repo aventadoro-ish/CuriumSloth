@@ -36,7 +36,7 @@ int	soundTest() {
 	std::cout << "Replaying the recorded audio: " << std::endl; 
 	aReplayer.replayAudio();
 
-	free(newBuf);
+	// free(newBuf);
 
 	// Save audio to a file
 	char save;
