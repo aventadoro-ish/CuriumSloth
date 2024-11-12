@@ -33,21 +33,54 @@ void manageDownloads();
 queue<string> messageQueue;
 
 int main() {
-    COMPort p1 = COMPort();
-    COMPort p2 = COMPort();
+    COMPort p1 = COMPort(COMPortBaud::BAUD_115200, CPParity::NONE, 2);
+    COMPort p2 = COMPort(COMPortBaud::BAUD_115200, CPParity::NONE, 2);
 
-    p1.openPort("/dev/pts/2");
-    p2.openPort("/dev/pts/3");
+    // p1.openPort("/dev/ttyUSB0");
+    // p2.openPort("/dev/ttyUSB1");
 
-    char* msg = "Hello there!";
-    char* recMsg = (char*)malloc(100 * sizeof(char));
+    p1.openPort("/dev/pts/3");
+    p2.openPort("/dev/pts/2");
+    
+    cout << "Here 1 " << endl;
 
-    std::cout << p1.sendMessage(msg, strlen(msg)) << endl;
-    std::cout << p2.receiveMessage(recMsg, 100) << endl;
+    AudioRecorder ar = AudioRecorder(0x4000, 16, 2);
+    ar.recordAudio(5);
+    cout << "Here 2 " << endl;
+    ar.replayAudio();
 
-    recMsg[strlen(recMsg)] = 0;
+    return 0;
+    // p1.sendMessage(ar.getBuffer(), ar.getBufferSize());
+    cout << "Here 3 " << endl;
 
-    std::cout << recMsg << endl;
+    // for (int i = 0; i < 32; i++) {
+    //     cout << ar.getBuffer()[i];
+    // }
+
+
+    char* recBud = (char*)malloc(ar.getBufferSize() * sizeof(char));
+
+    p2.receiveMessage(recBud, ar.getBufferSize());
+
+    AudioRecorder ap = AudioRecorder(0x4000, 16, 2);
+    ap.setBuffer((short*)recBud, ar.getBufferSize());
+    // for (int i = 0; i < 32; i++) {
+    //     cout << ap.getBuffer()[i];
+    // }
+
+    // ap.replayAudio();
+
+    p1.closePort();
+    p2.closePort();
+    cout << "Here 4 " << endl;
+
+    /* COM Port text mesasge demo */
+    // char* msg = "Hello there!";
+    // char* recMsg = (char*)malloc(100 * sizeof(char));
+    // std::cout << p1.sendMessage(msg, strlen(msg)) << endl;
+    // std::cout << p2.receiveMessage(recMsg, 100) << endl;
+    // recMsg[strlen(recMsg)] = 0;
+    // std::cout << recMsg << endl;
 
     return 0;
 
