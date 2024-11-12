@@ -6,18 +6,12 @@
     <ClCompile Include="src\QueueTemp.cpp" />
     <ClCompile Include="src\soundTest.cpp" />
     <ClCompile Include="src\terminal.cpp" />
-<<<<<<< HEAD
     <ClCompile Include="src\COMPort.cpp" />
-=======
->>>>>>> 023ecda294d76a2f036bf18820660a376a76e412
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CmS_Sound.h" />
     <ClInclude Include="src\Queue.h" />
     <ClInclude Include="src\terminal.h" />
-<<<<<<< HEAD
     <ClInclude Include="src\COMPort.h" />
-=======
->>>>>>> 023ecda294d76a2f036bf18820660a376a76e412
   </ItemGroup>
 </Project>
