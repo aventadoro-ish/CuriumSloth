@@ -11,11 +11,11 @@
 #include <alsa/asoundlib.h>		// At terminal need to install alsa headers to /usr/include/alsa via installing: $ sudo apt-get install libasound2-dev   
 
 // Constants (depend on hardware capabilities)
-#define SAMPLE_TIME         6       * 4   // 6 seconds. Total sample/playback time in seconds 
-#define SAMPLE_RATE         16384   * 4   // # of frames (samples) per second - using 65536/4 = 16384 gives 1 buffer/s
+// #define SAMPLE_TIME         6       * 4   // 6 seconds. Total sample/playback time in seconds 
+// #define SAMPLE_RATE         16384   * 4   // # of frames (samples) per second - using 65536/4 = 16384 gives 1 buffer/s
 #define BYTES_PER_HW_BUF    65536         // 2^16 (based on hardware buffer max size)
-#define NUM_CHANNELS        2             // # of channels (choose 1 for mono, 2 for stereo)
-#define BYTES_PER_SAMPLE    2             // 16 Bit samples chosen = 2 bytes per sample (frame)
+// #define NUM_CHANNELS        2             // # of channels (choose 1 for mono, 2 for stereo)
+// #define BYTES_PER_SAMPLE    2             // 16 Bit samples chosen = 2 bytes per sample (frame)
 #define PERIODS_PER_HW_BUF  4  
 
 #else
@@ -92,9 +92,11 @@ int AudioRecorder::prepareBuffer(int seconds) {
 	
 #elif __linux__
 
-	recBufSize = (seconds * 4 * BYTES_PER_HW_BUF);       		// Nuber of bytes in the buffer used to store the complete playback/capture data
-	recBuf = (AudioBufT*)malloc(recBufSize * sizeof(AudioBufT));
-
+	// Nuber of bytes in the buffer used to store the complete playback/capture data
+	//			  5       * 2    	 * 16				/ 8 * 16384				   * 2
+	recBufSize = (seconds * recNumCh * recBitsPerSample / 8 * recSamplesPerSencod) * sizeof(AudioBufT);
+	recBuf = (AudioBufT*)malloc(recBufSize);
+	cout << "Allocated " << recBufSize << " bytes" << endl;
 #else
 
 #endif
@@ -106,10 +108,10 @@ int AudioRecorder::prepareBuffer(int seconds) {
 	return 0;
 }
 
+#if defined(_WIN32)
 /*****************************************************************************
  * 							WINDOWS IMPLEMENTATION							 *
  *****************************************************************************/
-#if defined(_WIN32)
 
 void AudioRecorder::setupFormat() {
 	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
@@ -288,6 +290,7 @@ int AudioRecorder::recordBuffer() {
 	size_t max = 0; 
 	
 	readbuf(pcm_handle_Capture, (char *)recBuf, FRAMES_IN_BIG_BUF, &framesR, &max);
+	// readbuf(pcm_handle_Capture, (char *)recBuf, recBufSize, &framesR, &max);
 	
 	cout << "recordBuffer() recorded " << framesR << "frames" << endl;
 	return 0;
@@ -305,6 +308,9 @@ int AudioRecorder::playBuffer() {
 	int FRAMES_IN_BIG_BUF = recBufSize / BYTES_PER_FRAME;
 	size_t framesW = 0;  
 	writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, FRAMES_IN_BIG_BUF, &framesW);
+	// writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, recBufSize, &framesW);
+	cout << "playBuffer() replayed " << framesW << "frames" << endl;
+
 	return 0;
 }
 void AudioRecorder::closePlayback() {
@@ -352,13 +358,13 @@ int AudioRecorder::prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream
 
 	// Set sample rate.
 	// If the exact rate is not supported by the hardware, use the nearest rate
-	exact_rate = SAMPLE_RATE; 
+	exact_rate = recSamplesPerSencod; 
 	if (snd_pcm_hw_params_set_rate_near(*pcm_handle, *hwparams, &exact_rate, &dir) < 0){
 		fprintf(stderr, "Error setting rate\n");
 		return(-1);
 	}
 	if(dir != 0) {
-		fprintf(stderr, "The rate %d Hz is not supported by your hardware. Using %d Hz instead.\n", SAMPLE_RATE, exact_rate);
+		fprintf(stderr, "The rate %d Hz is not supported by your hardware. Using %d Hz instead.\n", recSamplesPerSencod, exact_rate);
 	}
 
 	// Set number of channels (2 for stereo or 1 for mono)

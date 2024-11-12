@@ -10,6 +10,7 @@ void displayMainMenu() {
     printf("\n====== Main Menu ======\n");
     printf("1. Home\n");
     printf("2. Receive\n");
+    printf("3. Communication Settings\n");
     printf("0. Exit\n");
     printf("=======================\n");
     printf("Enter your choice: ");
@@ -22,7 +23,6 @@ void displayHomeMenu() {
     printf("2. Play Audio\n");
     printf("3. Queue a Message\n");
     printf("4. Display Queued Messages\n");
-    printf("5. Communication Settings\n");
     printf("0. Back\n");
     printf("========================\n");
     printf("Enter your choice: ");
@@ -37,6 +37,16 @@ void displayReceiveMenu() {
     printf("0. Back\n");
     printf("==========================\n");
     printf("Enter your choice: ");
+}
+
+void displayCommunicationSettings() {
+	printf("\n====== Communication Settings ======\n");
+	printf("1. Adjust Bitrate\n");
+	printf("2. Set COM Port\n");
+	printf("3. Set Sample Rate\n");
+	printf("0. Back\n");
+	printf("====================================\n");
+	printf("Enter your choice: ");
 }
 
 

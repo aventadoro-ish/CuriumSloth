@@ -102,7 +102,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\gobind\Documents\CuriumSloth\src;${ProjectDir}\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -129,16 +129,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\CmS_Sound.cpp" />
+    <ClCompile Include="src\COMPort.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\QueueTemp.cpp" />
     <ClCompile Include="src\soundTest.cpp" />
-    <ClCompile Include="src\sound.cpp" />
     <ClCompile Include="src\terminal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CmS_Sound.h" />
+    <ClInclude Include="src\COMPort.h" />
     <ClInclude Include="src\Queue.h" />
-    <ClInclude Include="src\sound.h" />
     <ClInclude Include="src\terminal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
