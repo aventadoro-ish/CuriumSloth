@@ -13,6 +13,7 @@
 #include "CmS_Sound.h"
 #include "COMPort.h"
 #include "Queue.h"
+#include "Message.h"
 
 using namespace std;
 
@@ -36,6 +37,24 @@ void setSampleRate();
 queue<string> messageQueue;
 
 int main() {
+    char* test1 = "Hello there!";
+
+    Message origin = Message();
+
+    // + 1 accounts for the null-termination
+    origin.addData(test1, strlen(test1) + 1);
+    origin.describeData(0, 1, MSGType::TEXT, MSGEncryption::NONE, MSGCompression::NONE);
+    origin.encodeMessage();
+
+    Message dst = Message();
+    dst.addData(origin.getMessage(), origin.getMessageSize(), false);
+    dst.decodeMessage();
+
+    char* test2 = (char*)dst.getMessage();
+    cout << test2 << endl;
+    return 0;
+
+
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
     bool running = true;
 
