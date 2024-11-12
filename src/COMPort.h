@@ -13,25 +13,25 @@
 
 #endif
 
-enum CPParity {
+enum class  CPParity {
     EVEN,
     ODD,
     NONE
 };
 
-enum COMPortBaud {
-    BAUD_4800       = 4800,
-    BAUD_9600       = 9600,
-    BAUD_19200      = 19200,
-    BAUD_38400      = 38400,
-    BAUD_57600      = 57600,
-    BAUD_115200     = 115200,
-    BAUD_230400     = 230400,
-    BAUD_460800     = 460800,
-    BAUD_921600     = 921600
+enum class COMPortBaud {
+    COM_BAUD_4800       = 4800,
+    COM_BAUD_9600       = 9600,
+    COM_BAUD_19200      = 19200,
+    COM_BAUD_38400      = 38400,
+    COM_BAUD_57600      = 57600,
+    COM_BAUD_115200     = 115200,
+    COM_BAUD_230400     = 230400,
+    COM_BAUD_460800     = 460800,
+    COM_BAUD_921600     = 921600
 };
 
-enum CPErrorCode {
+enum class CPErrorCode {
     SUCCESS,
     PORT_IS_CLOSED,
     PORT_IS_OPEN,
@@ -44,7 +44,7 @@ enum CPErrorCode {
 
 class COMPort {
     char* port_name = nullptr;
-    COMPortBaud baud = COMPortBaud::BAUD_9600;
+    COMPortBaud baud = COMPortBaud::COM_BAUD_9600;
     CPParity parity = CPParity::NONE;
     int stop_bits = 1;
     bool is_port_open = false;
@@ -61,6 +61,9 @@ class COMPort {
 
 #ifdef _WIN32
     // TODO: !!! put Windows-specific method declarations here !!! 
+    CPErrorCode writeToPort(void* buf, unsigned int num_bytes);
+    
+    CPErrorCode readFromPort(void* buf, size_t bufSize);
 
 #elif __linux__
     // TODO: !!! put Windows-specific method declaration here !!! 

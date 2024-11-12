@@ -143,6 +143,16 @@ CPErrorCode COMPort::closePort() {
 
 // TODO: !!! put Windows-specific implementation here !!! 
 
+CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
+    return CPErrorCode::WRITE_FAILED;
+
+}
+
+CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
+    return CPErrorCode::READ_FAILED;
+}
+
+
 #elif __linux__
 /*****************************************************************************
  * 							LINUX IMPLEMENTATION							 *
