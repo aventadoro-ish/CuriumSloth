@@ -2,11 +2,9 @@
 
 #ifdef _WIN32
 #include <windows.h>					// Contains WAVEFORMATEX structure
-typedef short AudioBufT;
 
 #elif __linux__
 #include <alsa/asoundlib.h>		// At terminal need to install alsa headers to /usr/include/alsa via installing: $ sudo apt-get install libasound2-dev   
-typedef char AudioBufT;
 
 #else
 #error "Platform not supported"
@@ -54,7 +52,7 @@ private:
 	uint16_t recBitsPerSample = 16;
 	uint16_t recNumCh = 1;
 
-	AudioBufT* recBuf = nullptr;
+	void* recBuf = nullptr;
 	uint32_t recBufSize = 0;
 
 
@@ -159,8 +157,8 @@ public:
 	/// A way to get the pointer to the recBuf
 	/// </summary>
 	/// <returns>recBuf pointer (may be nullptr)</returns>
-	short* getBuffer() {
-		return (short*)recBuf;
+	void* getBuffer() {
+		return recBuf;
 	}
 
 	/// <summary>
@@ -168,16 +166,7 @@ public:
 	/// </summary>
 	/// <returns>buffer size (0 for empty buffer)</returns>
 	uint32_t getBufferSize() {
-#ifdef _WIN32
 		return recBufSize;
-#elif __linux__
-		// interface returns short* buf, but linux uses char* buf
-		// so linux should report bufSize to be 2 times less
-		return recBufSize / sizeof(short);
-#else
-		return 0;
-#endif
-
 	}
 
 	/// <summary>
@@ -186,8 +175,8 @@ public:
 	/// </summary>
 	/// <param name="buf">Buffer to be replayed</param>
 	/// <param name="bufSize">Size of the buffer</param>
-	void setBuffer(short* buf, uint32_t bufSize) {
-		recBuf = (AudioBufT*)buf;
+	void setBuffer(void* buf, uint32_t bufSize) {
+		recBuf = buf;
 		recBufSize = bufSize;
 	}
 

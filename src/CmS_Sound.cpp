@@ -13,7 +13,7 @@
 // Constants (depend on hardware capabilities)
 // #define SAMPLE_TIME         6       * 4   // 6 seconds. Total sample/playback time in seconds 
 // #define SAMPLE_RATE         16384   * 4   // # of frames (samples) per second - using 65536/4 = 16384 gives 1 buffer/s
-#define BYTES_PER_HW_BUF    65536         // 2^16 (based on hardware buffer max size)
+#define BYTES_PER_HW_BUF    0xffff         // 2^16 (based on hardware buffer max size)
 // #define NUM_CHANNELS        2             // # of channels (choose 1 for mono, 2 for stereo)
 // #define BYTES_PER_SAMPLE    2             // 16 Bit samples chosen = 2 bytes per sample (frame)
 #define PERIODS_PER_HW_BUF  4  
@@ -91,11 +91,16 @@ int AudioRecorder::prepareBuffer(int seconds) {
 	recBuf = (AudioBufT*)malloc(recBufSize * sizeof(AudioBufT));
 	
 #elif __linux__
+	long unsigned int bytesPerSample = recBitsPerSample / 8;
+	long unsigned int bytesPerSecond = bytesPerSample * recNumCh * recSamplesPerSencod;
+	long unsigned int bytesToAllocate = bytesPerSecond * seconds;
+	long unsigned int elementsToAllocate = bytesToAllocate / sizeof(char);
+	recBufSize = elementsToAllocate;
 
 	// Nuber of bytes in the buffer used to store the complete playback/capture data
 	//			  5       * 2    	 * 16				/ 8 * 16384				   * 2
-	recBufSize = (seconds * recNumCh * recBitsPerSample / 8 * recSamplesPerSencod) * sizeof(AudioBufT);
-	recBuf = (AudioBufT*)malloc(recBufSize);
+	// recBufSize = (seconds * recNumCh * recBitsPerSample / 8 * recSamplesPerSencod) * sizeof(AudioBufT);
+	recBuf = (void*)malloc(recBufSize);
 	cout << "Allocated " << recBufSize << " bytes" << endl;
 #else
 
@@ -289,7 +294,7 @@ int AudioRecorder::recordBuffer() {
 	size_t framesR = 0;  
 	size_t max = 0; 
 	
-	readbuf(pcm_handle_Capture, (char *)recBuf, FRAMES_IN_BIG_BUF, &framesR, &max);
+	readbuf(pcm_handle_Capture, (char*)recBuf, FRAMES_IN_BIG_BUF, &framesR, &max);
 	// readbuf(pcm_handle_Capture, (char *)recBuf, recBufSize, &framesR, &max);
 	
 	cout << "recordBuffer() recorded " << framesR << "frames" << endl;
@@ -307,7 +312,7 @@ int AudioRecorder::playBuffer() {
 	int BYTES_PER_FRAME = (recNumCh * recBitsPerSample / 8);      		// = 4 for 16 bit stereo
 	int FRAMES_IN_BIG_BUF = recBufSize / BYTES_PER_FRAME;
 	size_t framesW = 0;  
-	writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, FRAMES_IN_BIG_BUF, &framesW);
+	writebuf(pcm_handle_Playback, (char*)recBuf, FRAMES_IN_BIG_BUF, &framesW);
 	// writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, recBufSize, &framesW);
 	cout << "playBuffer() replayed " << framesW << "frames" << endl;
 
@@ -402,10 +407,11 @@ int AudioRecorder::prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream
 
 // record audio
 long AudioRecorder::readbuf(snd_pcm_t *handle, char *buf, long len, size_t *frames, size_t *max) {
+	cout << "readbuf(...) len =" << len << endl;
     long r;
 	_snd_pcm_format format = SND_PCM_FORMAT_S16_LE;
 	int channels = 2;
-	int frame_bytes = (snd_pcm_format_width(format) / 8) * channels; 
+	int frame_bytes = (snd_pcm_format_width(format) / 8) * recNumCh; 
     
 	while (len > 0) {
         r = snd_pcm_readi(handle, buf, len);		
@@ -424,10 +430,10 @@ long AudioRecorder::readbuf(snd_pcm_t *handle, char *buf, long len, size_t *fram
 }
 
 long AudioRecorder::writebuf(snd_pcm_t *handle, char *buf, long len, size_t *frames) {
+	cout << "writebuf(...) len =" << len << endl;
     long r;
-	int channels = 2;
 	_snd_pcm_format format = SND_PCM_FORMAT_S16_LE;
-    int frame_bytes = (snd_pcm_format_width(format) / 8) * channels;
+    int frame_bytes = (snd_pcm_format_width(format) / 8) * recNumCh;
     while (len > 0) {
         r = snd_pcm_writei(handle, buf, len);		
         if (r == -EAGAIN)

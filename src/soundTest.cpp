@@ -23,11 +23,11 @@ int	soundTest() {
 	AudioRecorder aRec = AudioRecorder(44200, 16);
 	std::cout << "Recording audio for 10 seconds: " << std::endl;
 	aRec.recordAudio(10);											// record for 10 seconds
-	short* buf = aRec.getBuffer();
+	void* buf = aRec.getBuffer();
 	uint32_t bufLen = aRec.getBufferSize();
 
 
-	short* newBuf = (short*)malloc(bufLen * sizeof(short));
+	void* newBuf = (short*)malloc(bufLen * sizeof(short));
 	memcpy(newBuf, buf, bufLen * sizeof(short));
 
 
@@ -36,7 +36,7 @@ int	soundTest() {
 	std::cout << "Replaying the recorded audio: " << std::endl; 
 	aReplayer.replayAudio();
 
-	free(newBuf);
+	// free(newBuf);
 
 	// Save audio to a file
 	char save;
