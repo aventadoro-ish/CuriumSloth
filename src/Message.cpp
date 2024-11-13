@@ -24,7 +24,7 @@ Message::Message() {
   bufO = nullptr;
   sizeO = 0;
 
-  encryptionKey = 0;
+  encryptionKey = nullptr;
   isEncode = true;
 
   header = MSGHeader();
@@ -297,9 +297,13 @@ int Message::addData(void* buf, size_t size, bool encode) {
     return 0;
 }
 
-int Message::setEncryptionKey(unsigned int key) {
-    encryptionKey = key;
-    return 0;
+int Message::setEncryptionKey(char* key, size_t keyLen) {
+    encryptionKey = (char*)malloc(keyLen * sizeof(char));
+    memcpy(encryptionKey, key, keyLen);
+    eKeyLen = keyLen;
+
+    // returns 0 for encryptionKey != nullptr => allocated successfully
+    return (encryptionKey == nullptr);
 }
 
 void* Message::getMessage() {

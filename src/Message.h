@@ -83,7 +83,8 @@ class Message {
     MSGHeader header;
     MSGFooter footer;
 
-    unsigned int encryptionKey;
+    char* encryptionKey;
+    size_t eKeyLen;
     bool isEncode;
 
     int encryptMessage();
@@ -102,14 +103,21 @@ public:
     Message();
     ~Message();
 
-    /// @brief Pass message data to the class. A copy of the message is allocated by the class
+    /// @brief Pass message data to the class. A copy of the message is 
+    /// allocated by the class
     /// @param buf message to copy
     /// @param size size of the message in bytes
     /// @param encode operation on data. true -> encode, false -> decode
     /// @return 0 if success
     int addData(void* buf, size_t size, bool encode = true);
 
-    int setEncryptionKey(unsigned int key);
+
+    /// @brief Copies the provided key into encryptionKey member that is used 
+    /// to encrypt a message. If encryption is NONE, this is not needed. \r
+    /// @param key key to be copied into memory
+    /// @param keyLen length of the key array
+    /// @return 0 if success
+    int setEncryptionKey(char* key, size_t keyLen);
 
 
     /// @brief For ENCODING: Returns a pointer to the buffer with encoded raw 

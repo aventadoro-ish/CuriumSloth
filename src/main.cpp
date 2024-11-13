@@ -40,16 +40,22 @@ int main() {
     char* test1 = "Hello there!";
 
     Message origin = Message();
-
-    // + 1 accounts for the null-termination
-    origin.addData(test1, strlen(test1) + 1);
-    origin.describeData(0, 1, MSGType::TEXT, MSGEncryption::NONE, MSGCompression::NONE);
-    origin.encodeMessage();
-
     Message dst = Message();
-    dst.addData(origin.getMessage(), origin.getMessageSize(), false);
-    dst.decodeMessage();
 
+    // add raw payload data in encode mode (true - default)
+    origin.addData(test1, strlen(test1) + 1); // + 1 accounts for the null-termination
+    origin.describeData(0, 1, MSGType::TEXT, MSGEncryption::NONE, MSGCompression::NONE);
+    // origin.setEncryptionKey(0);  // TODO: ADD ENCRYPTION SUPPORT
+    origin.encodeMessage();     // generate header, payload, footer
+
+
+    // transmission 
+
+    // add received data in decode mode (false argument)
+    dst.addData(origin.getMessage(), origin.getMessageSize(), false);
+    dst.decodeMessage();    // extract metadata and payload
+
+    // use received and decoded data
     char* test2 = (char*)dst.getMessage();
     cout << test2 << endl;
     return 0;
