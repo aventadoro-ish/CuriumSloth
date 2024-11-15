@@ -31,7 +31,7 @@ int nComBits = 8;									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimeout struct variable
 
  // The client - A testing main that calls the functions below
-int main() {
+int rs232test() {
 
 	// Set up both sides of the comm link
 	initPort(&hComRx, COMPORT_Rx, nComRate, nComBits, timeout);	// Initialize the Rx port

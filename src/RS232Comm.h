@@ -9,6 +9,7 @@ void initPort(HANDLE* hCom, wchar_t* COMPORT, int nComRate, int nComBits, COMMTI
 void purgePort(HANDLE* hCom);
 void outputToPort(HANDLE* hCom, LPCVOID buf, DWORD szBuf);
 DWORD inputFromPort(HANDLE* hCom, LPVOID buf, DWORD szBuf);
+int rs232test();
 
 // Sub functions
 void createPortFile(HANDLE* hCom, wchar_t* COMPORT);

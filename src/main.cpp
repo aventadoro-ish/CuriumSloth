@@ -13,6 +13,7 @@
 #include "CmS_Sound.h"
 #include "COMPort.h"
 #include "Queue.h"
+#include "RS232Comm.h"
 
 using namespace std;
 
@@ -20,6 +21,7 @@ using namespace std;
 void displayMainMenu();
 void displayHomeMenu();
 void displayReceiveMenu();
+void displayCommunicationSettings();
 void recordAudio();
 void playAudio();
 void queueMessage();
@@ -31,6 +33,7 @@ void manageDownloads();
 void adjustBitrate();
 void setCOMport();
 void setSampleRate();
+void rs232message();
 
 // Global message queue definition
 queue<string> messageQueue;
@@ -63,6 +66,9 @@ int main() {
                 case 4:
                     displayQueue();  // Display Queued Messages
                     break;
+				case 5:
+					rs232message(); // Test Function for RS232 communication
+					break;
                 case 0:
                     inHomeMenu = false;  // Go back to the main menu
                     break;
@@ -153,6 +159,11 @@ void queueMessage() {
 // Function to display queued messages
 void displayQueue() {
     printf("Display queue (placeholder)...\n");
+}
+
+// Wrapper function for RS232 communication testing
+void rs232message() {
+	rs232test(); // Test Function for RS232 communication
 }
 
 // Placeholder for communication settings function

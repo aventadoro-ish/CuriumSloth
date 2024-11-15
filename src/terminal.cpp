@@ -23,6 +23,7 @@ void displayHomeMenu() {
     printf("2. Play Audio\n");
     printf("3. Queue a Message\n");
     printf("4. Display Queued Messages\n");
+	printf("5. RS232 Test\n");
     printf("0. Back\n");
     printf("========================\n");
     printf("Enter your choice: ");
