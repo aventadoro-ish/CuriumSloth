@@ -24,7 +24,8 @@ enum class MSGEncryption {
 
 enum class MSGCompression {
     NONE,
-    HUFFMAN
+    HUFFMAN,
+    RLE
 };
 
 
@@ -35,6 +36,7 @@ struct MSGHeader {
     MSGType type;
     MSGEncryption encryption;
     MSGCompression compression;
+    unsigned int decompressedSize;
     unsigned int payloadSize;   // in bytes
 
     MSGHeader() {
@@ -43,6 +45,7 @@ struct MSGHeader {
         type = MSGType::TEXT;
         encryption = MSGEncryption::NONE;
         compression = MSGCompression::NONE;
+        decompressedSize = 0;
         payloadSize = 0;
     };
 };
@@ -88,6 +91,9 @@ class Message {
     char* encryptionKey;
     size_t eKeyLen;
     bool isEncode;
+
+
+
 
     int encryptMessage();
     int compressMessage();

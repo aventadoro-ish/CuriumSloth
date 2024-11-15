@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <cstdint>
 
+#include "Compression.h"
+#include "Encryption.h"
+
 using namespace std;
 
 
@@ -60,7 +63,14 @@ int Message::encryptMessage() {
         sizeB = sizeA;
         memcpy(bufB, bufA, sizeB);
         break;
-    
+
+    case MSGEncryption::XOR: {
+        bufB = XORencrypt(bufA, sizeA, *encryptionKey);
+        sizeB = sizeA;
+        // printHexDump(bufB, sizeB);
+        
+        break;
+    }
     default:
         // TODO: Add more encryption standards support
         cerr << "WARNING! Encryption is not supported";
@@ -93,7 +103,20 @@ int Message::compressMessage() {
         sizeC = sizeB;
         memcpy(bufC, bufB, sizeC);
         break;
-    
+    case MSGCompression::RLE: {
+        bufC = (void*)malloc(sizeB);
+
+        sizeC = RLEcompress((unsigned char*)bufB, sizeB, (unsigned char*)bufC, sizeB);
+        // cout << "Compressed message: ";
+        // for (int i = 0; i < sizeC; i++) { cout << ((char*)bufC)[i]; } cout << endl;
+
+        // cout << "Compressed size: " << sizeC << endl;
+        // int count = 0;
+        // for (int i = 0; i < sizeC; i++) { count += ((char*)bufC)[i] == 0x1b; }
+        // cout << "Num escape chars: " << count << endl;
+        // printHeader();
+        break;
+    }
     default:
         // TODO: Add more compression standards support
         cerr << "WARNING! Compression is not supported";
@@ -135,6 +158,8 @@ int Message::prepareOutput() {
         cerr << "WARNING! Overriding bufO" << endl;
         return -1;
     }
+
+    header.payloadSize = sizeC;
 
     size_t total_size = sizeof(MSGHeader) + sizeC + sizeof(MSGFooter);
     // cout << "Output buffer size = " << total_size << endl;
@@ -192,15 +217,31 @@ int Message::decompressMessage() {
         return -1;
     }
 
-
+    // pointer to the start of the message excluding the header 
+    void* messageStartIdx = (void*)((unsigned int)bufA + sizeof(MSGHeader));
 
     switch (header.compression) {
     case MSGCompression::NONE:
         sizeB = header.payloadSize;
         bufB = (void*)malloc(sizeB);
-        memcpy(bufB, (void*)((unsigned int)bufA + sizeof(MSGHeader)), sizeB);
+        memcpy(bufB, messageStartIdx, sizeB);
         break;
-    
+    case MSGCompression::RLE:{
+        sizeB = header.decompressedSize;
+        bufB = (void*)malloc(sizeB);
+        
+
+        RLEdecompress((unsigned char*)messageStartIdx, header.payloadSize, (unsigned char*)bufB, sizeB, 0x1b);
+        // int count = 0;
+        // for (int i = 0; i < sizeB; i++) { count += ((char*)bufB)[i] == 0x1b; }
+        // cout << "Num escape chars: " << count << endl;
+        // printHexDump(bufB, sizeB);
+
+        // cout << "Compressed message: ";
+        // for (int i = 0; i < sizeB; i++) { cout << ((char*)bufB)[i]; } cout << endl;
+
+        break;
+    }
     default:
         // TODO: Add more decompression standards support
         cerr << "WARNING! Decompression is not supported" << endl;
@@ -236,7 +277,11 @@ int Message::decryptMessage() {
         sizeC = sizeB;
         memcpy(bufC, bufB, sizeC);
         break;
-    
+    case MSGEncryption::XOR: {
+        bufC = XORencrypt(bufB, sizeB, *encryptionKey);
+        sizeC = sizeB;
+        break;
+    }
     default:
         // TODO: Add more decryption standards support
         cerr << "WARNING! Decryption is not supported";
@@ -327,6 +372,7 @@ void Message::printHeader() {
     cout << "\tMessage:     " << header.messageID << endl; 
     cout << "\tEncryption:  " << (int) header.encryption << endl; 
     cout << "\tCompression: " << (int) header.compression << endl; 
+    cout << "\tOriginal size:" << header.decompressedSize << endl; 
     cout << "\tPayload size:" << header.payloadSize << endl; 
 }
 
@@ -350,12 +396,12 @@ int Message::describeData(int senderID,
     header.type = type;
     header.encryption = enc;
     header.compression = cmp;
+    header.decompressedSize = sizeA;
     header.payloadSize = sizeA;
     return 0;
 }
 
 int Message::encodeMessage() {
-    printHeader();
     if (!isEncode) {
         cerr << "ERROR! Trying to encode a message that is already encoded!" << endl;
         return -1;
@@ -369,6 +415,8 @@ int Message::encodeMessage() {
     if (compressMessage()) { cerr << "ERROR! compress message failed!" << endl; }
     if (calculateChecksum()) { cerr << "ERROR! checksum calculation failed!" << endl; }
     if (prepareOutput()) { cerr << "ERROR! unable to prepare output!" << endl; }
+
+    printHeader();
 
     // cout << sizeO << endl;
     // printHexDump(bufO, sizeO);

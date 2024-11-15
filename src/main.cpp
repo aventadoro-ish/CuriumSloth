@@ -37,22 +37,26 @@ void setSampleRate();
 queue<string> messageQueue;
 
 int main() {
-    char* test1 = "Hello there!";
+    char* test1 = "Heeeeeeeello there my deeeeeeeearrrr friend!";
 
     Message origin = Message();
     Message dst = Message();
+    char* key = "encryption key!";
 
     // add raw payload data in encode mode (true - default)
     origin.addData(test1, strlen(test1) + 1); // + 1 accounts for the null-termination
-    origin.describeData(0, 1, MSGType::TEXT, MSGEncryption::NONE, MSGCompression::NONE);
-    // origin.setEncryptionKey(0);  // TODO: ADD ENCRYPTION SUPPORT
+    origin.describeData(0, 1, MSGType::TEXT, MSGEncryption::XOR, MSGCompression::RLE);
+    origin.setEncryptionKey(key, strlen(key) + 1);  // TODO: ADD ENCRYPTION SUPPORT
     origin.encodeMessage();     // generate header, payload, footer
 
+    cout << endl << endl << endl;
 
     // transmission 
 
     // add received data in decode mode (false argument)
     dst.addData(origin.getMessage(), origin.getMessageSize(), false);
+    dst.setEncryptionKey(key, strlen(key) + 1);  // TODO: ADD ENCRYPTION SUPPORT
+
     dst.decodeMessage();    // extract metadata and payload
 
     // use received and decoded data
