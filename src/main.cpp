@@ -45,7 +45,6 @@ int main() {
 
     // add raw payload data in encode mode (true - default)
     origin.addData(test1, strlen(test1) + 1); // + 1 accounts for the null-termination
-    // origin.describeData(0, 1, MSGType::TEXT, MSGEncryption::XOR, MSGCompression::RLE);
     origin.describeData(0, 1, MSGType::TEXT, MSGEncryption::XOR, MSGCompression::RLE);
     origin.setEncryptionKey(key, strlen(key) + 1);  // TODO: ADD ENCRYPTION SUPPORT
     origin.encodeMessage();     // generate header, payload, footer
