@@ -1,0 +1,60 @@
+#include "MessageManager.h"
+#include <stdlib.h>     /* srand, rand */
+
+
+unsigned long MessageManger::generateMsgID() {
+    // rand is int, so we need to call it twice to get long int
+    unsigned long int res = (rand() << (sizeof(int) / 8)) | rand();
+    return res;
+}
+
+int MessageManger::transmitData(int receiverID,
+                                MSGType type,
+                                void* buf,
+                                size_t bufLen) {
+  int num_encode_faults = 0;
+  int num_add_faults = 0;
+
+  // round up int division
+  int num_msg = (bufLen + max_message_size - 1) / max_message_size;
+
+  // last iteration should eat the rest of the message
+  // may be less than max_message_size bytes long
+  for (int i = 0; i < num_msg - 1; i++) {
+    Message msg = Message();
+
+    void* start_idx = (void*)((unsigned long int)buf + (i * max_message_size));
+    if (msg.addData(start_idx, max_message_size)) {
+      num_add_faults++;
+    }
+    msg.describeData(senderID, 
+                     receiverID,
+                     generateMsgID(),
+                     type,
+                     MSGEncryption::NONE,  // TODO: add a way to change that
+                     MSGCompression::NONE  // ... and this too ...
+    );
+
+    if (msg.encodeMessage()) {
+      num_encode_faults++;
+    }
+
+    // TODO: change queue to menage memory
+    send_queue.addToQueue(&msg);
+  }
+
+  Message msg = Message();
+  void* start_idx =
+      (void*)((unsigned long int)buf + ((num_msg - 1) * max_message_size));
+  size_t len = bufLen - ((num_msg - 1) *
+                         max_message_size);  // TODO: check for off-by-1 error
+  msg.addData(start_idx, len);
+  msg.describeData(senderID, receiverID,
+                   generateMsgID(), 
+                   type,
+                   MSGEncryption::NONE,  // TODO: add a way to change that
+                   MSGCompression::NONE  // ... and this too ...
+  );
+
+  return 0;
+}

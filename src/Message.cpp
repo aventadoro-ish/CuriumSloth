@@ -35,6 +35,7 @@ Message::~Message() {
     if (bufB != nullptr) { free(bufB); }
     if (bufC != nullptr) { free(bufC); }
     if (bufO != nullptr) { free(bufO); }
+    if (encryptionKey != nullptr) { free(encryptionKey); }
 
 }
 
@@ -323,6 +324,7 @@ void Message::printHeader() {
     cout << "Message header:" << endl;
     cout << "\tSender:      " << header.senderID << endl; 
     cout << "\tReceiver:    " << header.receiverID << endl; 
+    cout << "\tMessage:     " << header.messageID << endl; 
     cout << "\tEncryption:  " << (int) header.encryption << endl; 
     cout << "\tCompression: " << (int) header.compression << endl; 
     cout << "\tPayload size:" << header.payloadSize << endl; 
@@ -338,11 +340,13 @@ void Message::printHeader() {
 
 int Message::describeData(int senderID,
                           int receiverID,
+                          unsigned long int messageID,
                           MSGType type,
                           MSGEncryption enc,
                           MSGCompression cmp) {
     header.senderID = senderID;
     header.receiverID = receiverID;
+    header.messageID = messageID;
     header.type = type;
     header.encryption = enc;
     header.compression = cmp;

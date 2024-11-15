@@ -11,8 +11,9 @@
 
 
 enum class MSGType {
-    TEXT,
-    AUDIO
+    TEXT,       // for plain text ascii
+    AUDIO,      // for audio
+    SYSTEM      // for system events, e.g. receive acknowledge, audio settings sync
 };
 
 enum class MSGEncryption {
@@ -30,6 +31,7 @@ enum class MSGCompression {
 struct MSGHeader {
     int senderID;
     int receiverID;
+    unsigned long int messageID;
     MSGType type;
     MSGEncryption encryption;
     MSGCompression compression;
@@ -145,6 +147,7 @@ public:
     /// @brief Allows to configure the handling of the message for encoding
     /// @param senderID who is sending the message
     /// @param receiverID who is receiving the message
+    /// @param messageID allows to distinguish messages
     /// @param type type of data
     /// @param enc encryption standard to use
     /// @param cmp compression standard to use
@@ -152,6 +155,7 @@ public:
     int describeData(
         int senderID, 
         int receiverID, 
+        unsigned long int messageID,
         MSGType type, 
         MSGEncryption enc, 
         MSGCompression cmp
