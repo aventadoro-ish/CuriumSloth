@@ -26,7 +26,7 @@ wchar_t COMPORT_Tx[] = L"COM4";										// --> If COM# is larger than 9 then us
 // Communication variables and parameters
 HANDLE hComRx;										// Pointer to the selected COM port (Receiver)
 HANDLE hComTx;										// Pointer to the selected COM port (Transmitter)
-int nComRate = 9600;								// Baud (Bit) rate in bits/second 9600
+int nComRate = 460800;								// Baud (Bit) rate in bits/second 9600
 int nComBits = 8;									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimeout struct variable
 
