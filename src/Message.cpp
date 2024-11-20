@@ -218,7 +218,7 @@ int Message::decompressMessage() {
     }
 
     // pointer to the start of the message excluding the header 
-    void* messageStartIdx = (void*)((unsigned int)bufA + sizeof(MSGHeader));
+    void* messageStartIdx = (void*)((unsigned long int)bufA + sizeof(MSGHeader));
 
     switch (header.compression) {
     case MSGCompression::NONE:
@@ -339,12 +339,12 @@ int Message::addData(void* buf, size_t size, bool encode) {
 
     memcpy(bufA, buf, size);
     
-    cout << "Message @" << hex << this << " adding data: '";
-    char* ch = (char*)buf;
-    for (int i = 0; i < size; i++) {
-        cout << ch[i];
-    }
-    cout << "'" << endl;
+    // cout << "Message @" << hex << this << " adding data: '";
+    // char* ch = (char*)buf;
+    // for (int i = 0; i < size; i++) {
+    //     cout << ch[i];
+    // }
+    // cout << "'" << endl;
 
     isEncode = encode;
 

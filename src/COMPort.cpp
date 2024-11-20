@@ -171,7 +171,7 @@ void COMPort::setParity(termios* options) {
         options->c_cflag &= ~PARENB;	// PARITY NOT ENABLED
         break;
     default:
-        cerr << "Invalid parity setting: " << parity << endl;
+        cerr << "Invalid parity setting: " << (int)parity << endl;
         break;
     }
 }
@@ -199,8 +199,8 @@ CPErrorCode COMPort::configPort() {
 	// Change the current settings to new values
 
 	// Set baud rate
-	cfsetispeed(&options, baud);				// Input speed (rate)  -- Most systems don't support different input and output speeds so keep these the same for portability
-	cfsetospeed(&options, baud);				// Output speed (rate)
+	cfsetispeed(&options, (speed_t)baud);				// Input speed (rate)  -- Most systems don't support different input and output speeds so keep these the same for portability
+	cfsetospeed(&options, (speed_t)baud);				// Output speed (rate)
 
 	// Enable the receiver and set as local mode - CLOCAL & CREAD should always be enabled. 
 	// CLOCAL so that program does not become owner of the port

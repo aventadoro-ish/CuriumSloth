@@ -16,6 +16,9 @@
 #include "Message.h"
 #include "MessageManager.h"
 
+#include "linux_utils.h"
+
+
 using namespace std;
 
 // Function prototypes for non-terminal logic
@@ -37,11 +40,53 @@ void setSampleRate();
 // Global message queue definition
 queue<string> messageQueue;
 
-int main() {
+void recSide() {
+
+    // Discards the input buffer
+    fflush(stdin);
+
+
+    COMPort port = COMPort();
+    while(port.openPort("/dev/pts/5") != CPErrorCode::SUCCESS) {
+        ;
+    }
+
+    size_t buf_size = 500;
+    void* buf = (void*)malloc(buf_size);
+    
+    for (;;) {
+
+        if (port.receiveMessage(buf, buf_size) == CPErrorCode::SUCCESS) {
+            Message msg = Message();
+            msg.addData(buf, buf_size, false);
+            msg.decodeMessage();
+
+            // cout << (char*)msg.getMessage() << endl;
+        } else {
+            cout << "Port read error" << endl;
+        }
+
+        if (kbhit()) {
+            cout << "Closing program" << endl;
+            return;
+        }
+
+
+
+    }
+
+}
+
+void sendSide() {
     char* test1 = "Heeeeeeeello there my deeeeeeeearrrr friend!";
 
+    COMPort port = COMPort();
+    port.openPort("/dev/pts/6");
 
     MessageManger mngr = MessageManger(0, 10);
+    mngr.setCOMPort(&port);
+
+
     mngr.transmitData(1, MSGType::TEXT, test1, strlen(test1) + 1);
 
 
@@ -49,13 +94,33 @@ int main() {
 
 
     while (mngr.tick()) {
-        ;
+        sleep(2);
     }
 
     cout << "Program ended no isuuse hfesjf" << endl;
+}
+
+
+int main() {
+    int cmd;
+    cin >> cmd;
+    if (cmd == 0) {
+        getchar();
+
+        recSide();
+    } else if (cmd == 1) {
+        getchar();
+
+        sendSide();
+    } else {
+        return 0;
+    }
+
+
 
     return 0;
 
+    char* test1 = "Heeeeeeeello there my deeeeeeeearrrr friend!";
 
 
 

@@ -105,6 +105,8 @@ int MessageManger::tick() {
             cout << msg_payload[i];
         }
         cout << endl;
+
+        port->sendMessage(msg->getMessage(), msg->getMessageSize());
         
         free(msg);
     }
