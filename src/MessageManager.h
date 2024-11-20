@@ -2,6 +2,7 @@
 
 #include "Message.h"
 #include "Queue2.h"
+#include "COMPort.h"
 
 
 /// @brief MessageManger handles sending data to a receiver. It splits
@@ -23,6 +24,8 @@ class MessageManger {
 
     unsigned long generateMsgID();
 
+    COMPort* port;
+
 
 public:
     MessageManger(int senderID, size_t max_msg_size = 0x3fff);
@@ -42,6 +45,15 @@ public:
     /// @brief Needs to be called in the main loop
     /// @return 0 if all queues are empty, -1 if error, 1 if queues are not empty (no errors)
     int tick();
+
+
+    void setCOMPort(COMPort* port) {
+        this->port = port;
+    }
+
+    size_t getBufferSize() {
+        return max_message_size + sizeof(MSGHeader) + sizeof(MSGFooter);
+    }
 
 
 };

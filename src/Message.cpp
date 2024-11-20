@@ -339,11 +339,12 @@ int Message::addData(void* buf, size_t size, bool encode) {
 
     memcpy(bufA, buf, size);
     
+    cout << "Message @" << hex << this << " adding data: '";
     char* ch = (char*)buf;
     for (int i = 0; i < size; i++) {
         cout << ch[i];
     }
-    cout << endl;
+    cout << "'" << endl;
 
     isEncode = encode;
 
@@ -360,8 +361,6 @@ int Message::setEncryptionKey(char* key, size_t keyLen) {
 }
 
 void* Message::getMessage() {
-    printHexDump(bufO, sizeO);
-
     return bufO;
 }
 

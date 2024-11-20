@@ -32,8 +32,7 @@ T* QueueProper<T>::pop() {
     head = head->pNext;
 
     T* res_data = head_cpy->data;
-    Message* msg = (Message*)res_data;
-    msg->getMessage();
+
 
     free(head_cpy);
 
@@ -64,12 +63,16 @@ void QueueProper<T>::push(T* new_data) {
         tail = tail->pNext;
     }
 
-    tail->data = (T*)malloc(sizeof(T));
-    if (tail->data == nullptr) {
-        cerr << "ERROR! malloc() for data of a new node failed!" << endl;
-    }
+    // tail->data = (T*)malloc(sizeof(T));
+    // tail->pNext = nullptr;
+    // if (tail->data == nullptr) {
+    //     cerr << "ERROR! malloc() for data of a new node failed!" << endl;
+    // }
+    // cout << "Queue - copying data from @" << hex << new_data << " to @" << hex << tail->data << endl;
+    // memcpy(tail->data, new_data, sizeof(T));
 
-    memcpy(tail->data, new_data, sizeof(T));
+    tail->data = new_data;
+    tail->pNext = nullptr;
     return;
 }
 

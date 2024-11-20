@@ -11,6 +11,12 @@ template<typename T>
 struct Node2 {
     Node2* pNext;  // pointer to the next node
     T* data;       // the data is now of template type T
+
+    Node2() {
+        pNext = nullptr;
+        data = nullptr;
+    };
+
 };
 
 
@@ -31,7 +37,8 @@ public:
     T* pop();
 
 
-    /// @brief Adds a copy of the data T to the queue
+    /// @brief Adds the data T to the queue 
+    /// (does not copy it, don't free new_data w/o popping it)
     /// @param new_data data to copy into the queue
     void push(T* new_data);
 

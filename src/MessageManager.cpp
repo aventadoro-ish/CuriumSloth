@@ -38,7 +38,7 @@ int MessageManger::transmitData(int receiverID,
         Message* msg = new Message();
 
         void* start_idx = (void*)((unsigned long int)buf + (i * max_message_size));
-        cout << hex << start_idx << endl;
+        cout << "Adding message from @" << hex << start_idx << endl;
         // for (int ii = 0; ii < max_message_size; ii++) {
         //     char* temp = (char*)start_idx;
         //     cout << temp[ii];
@@ -66,7 +66,7 @@ int MessageManger::transmitData(int receiverID,
         // TODO: change queue to menage memory
         send_queue.push(msg);
         
-        delete msg;
+        // delete msg;
 
         cout << "encoded message chuck " << i << endl;
     }
@@ -87,7 +87,7 @@ int MessageManger::transmitData(int receiverID,
 
     send_queue.push(msg);
 
-    delete msg;
+    // delete msg;
     return 0;
 }
 
@@ -96,19 +96,19 @@ int MessageManger::tick() {
     if (!send_queue.isEmpty()) {
         Message* msg = send_queue.pop();
 
-        cout << "SENDING MESSAGE:" << endl;
-        cout << hex << msg << endl;
-        msg->printHeader();
-        // msg->getMessage();
-        // char* msg_payload = (char*)msg->getMessage() + sizeof(MSGHeader);
+        cout << "SENDING MESSAGE:";
+        // msg->printHeader();
 
-        // for (int i = 0; i < msg->getPayloadSize(); i++) {
-        //     cout << msg_payload[i];
-        // }
-        // cout << endl;
+        char* msg_payload = (char*)msg->getMessage() + sizeof(MSGHeader);
+
+        for (int i = 0; i < msg->getPayloadSize(); i++) {
+            cout << msg_payload[i];
+        }
+        cout << endl;
         
         free(msg);
     }
+
   
     return !send_queue.isEmpty();
 }

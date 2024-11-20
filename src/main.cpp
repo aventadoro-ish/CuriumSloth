@@ -41,7 +41,7 @@ int main() {
     char* test1 = "Heeeeeeeello there my deeeeeeeearrrr friend!";
 
 
-    MessageManger mngr = MessageManger(0, 5);
+    MessageManger mngr = MessageManger(0, 10);
     mngr.transmitData(1, MSGType::TEXT, test1, strlen(test1) + 1);
 
 
@@ -51,6 +51,8 @@ int main() {
     while (mngr.tick()) {
         ;
     }
+
+    cout << "Program ended no isuuse hfesjf" << endl;
 
     return 0;
 
