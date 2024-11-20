@@ -338,6 +338,13 @@ int Message::addData(void* buf, size_t size, bool encode) {
     }
 
     memcpy(bufA, buf, size);
+    
+    char* ch = (char*)buf;
+    for (int i = 0; i < size; i++) {
+        cout << ch[i];
+    }
+    cout << endl;
+
     isEncode = encode;
 
     return 0;
@@ -353,6 +360,8 @@ int Message::setEncryptionKey(char* key, size_t keyLen) {
 }
 
 void* Message::getMessage() {
+    printHexDump(bufO, sizeO);
+
     return bufO;
 }
 
@@ -416,7 +425,7 @@ int Message::encodeMessage() {
     if (calculateChecksum()) { cerr << "ERROR! checksum calculation failed!" << endl; }
     if (prepareOutput()) { cerr << "ERROR! unable to prepare output!" << endl; }
 
-    printHeader();
+    // printHeader();
 
     // cout << sizeO << endl;
     // printHexDump(bufO, sizeO);
@@ -449,25 +458,32 @@ int Message::decodeMessage() {
 }
 
 int Message::getSenderID() {
-    return 0;
+    return header.senderID;
 }
 
 int Message::getReceiverID() {
-    return 0;
+    return header.receiverID;
 }
 
 MSGType Message::getType() {
-    return MSGType();
+    return header.type;
 }
 
 MSGCompression Message::getCompression() {
-    return MSGCompression();
+    return header.compression;
 }
 
 MSGEncryption Message::getEncryption() {
-    return MSGEncryption();
+    return header.encryption;
 }
 
+unsigned int Message::getOriginalSize() {
+    return header.decompressedSize;
+}
+
+unsigned int Message::getPayloadSize() {
+    return header.payloadSize;
+}
 
 void printHexDump(void* buf, size_t size) {
     unsigned char* data = static_cast<unsigned char*>(buf);

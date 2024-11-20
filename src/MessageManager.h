@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Message.h"
-#include "Queue.h"
+#include "Queue2.h"
 
 
 /// @brief MessageManger handles sending data to a receiver. It splits
@@ -14,15 +14,18 @@ class MessageManger {
     size_t max_message_size;
 
     // awaiting sending (first in, first out)
-    Queue<Message> send_queue;
+    QueueProper<Message> send_queue;
 
     // awaiting confirmation (retransmit based on timeout)
-    Queue<Message> pending_confirmation_queue;
+    QueueProper<Message> pending_confirmation_queue;
 
     int senderID;
 
+    unsigned long generateMsgID();
+
+
 public:
-    MessageManger(int senderID);
+    MessageManger(int senderID, size_t max_msg_size = 0x3fff);
     ~MessageManger();
 
 

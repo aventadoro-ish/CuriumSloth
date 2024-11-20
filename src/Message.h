@@ -182,6 +182,8 @@ public:
     /// @return 0 if success
     int decodeMessage();
 
+
+
     int getSenderID();
 
     int getReceiverID();
@@ -191,6 +193,10 @@ public:
     MSGCompression getCompression();
 
     MSGEncryption getEncryption();
+
+    unsigned int getOriginalSize();
+
+    unsigned int getPayloadSize();
 
 
 };
