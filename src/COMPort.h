@@ -6,7 +6,7 @@
 // TODO: !!! put Windows-specific stuff here !!! 
 #elif __linux__
 #include <termios.h>	// POSIX terminal control definitions
-
+// #include <sys/ioctl.h>
 
 #else
 #error "Platform not supported"
@@ -52,7 +52,7 @@ class COMPort {
 #ifdef _WIN32
     // TODO: !!! put Windows-specific member variables here !!! 
 #elif __linux__
-    // TODO: !!! put Windows-specific member variables here !!! 
+
     int fd; // file descriptor for the port
 
 #endif
@@ -66,7 +66,6 @@ class COMPort {
     CPErrorCode readFromPort(void* buf, size_t bufSize);
 
 #elif __linux__
-    // TODO: !!! put Windows-specific method declaration here !!! 
     CPErrorCode configPort();
 
     void setParity(termios* options);
@@ -110,4 +109,13 @@ public:
 
     CPErrorCode closePort();
 
+    CPErrorCode setNonBlockingMode();
+
+    CPErrorCode setBlockingMode();
+
+    unsigned int numInputBytes();
+
+    unsigned int numOutputButes();
+
+    bool isPortOpen();
 };

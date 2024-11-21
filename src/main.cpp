@@ -47,43 +47,53 @@ void recSide() {
 
 
     COMPort port = COMPort();
-    while(port.openPort("/dev/pts/5") != CPErrorCode::SUCCESS) {
+    while(port.openPort("/dev/pts/12") != CPErrorCode::SUCCESS) {
         ;
     }
-
-    size_t buf_size = 500;
-    void* buf = (void*)malloc(buf_size);
     
-    for (;;) {
+    MessageManger mngr = MessageManger(0, 10);
+    mngr.setCOMPort(&port);
 
-        if (port.receiveMessage(buf, buf_size) == CPErrorCode::SUCCESS) {
-            Message msg = Message();
-            msg.addData(buf, buf_size, false);
-            msg.decodeMessage();
-
-            // cout << (char*)msg.getMessage() << endl;
-        } else {
-            cout << "Port read error" << endl;
-        }
+    // while (mngr.tick()) {
+    while (true) {
+        mngr.tick();
 
         if (kbhit()) {
-            cout << "Closing program" << endl;
-            return;
+            cout << "exiting receive mode" << endl;
+            break;
         }
-
-
-
     }
+
+
+    // size_t buf_size = 500;
+    // void* buf = (void*)malloc(buf_size);
+    // for (;;) {
+    //     if (port.receiveMessage(buf, buf_size) == CPErrorCode::SUCCESS) {
+    //         Message msg = Message();
+    //         msg.addData(buf, buf_size, false);
+    //         msg.decodeMessage();
+    //         // cout << (char*)msg.getMessage() << endl;
+    //     } else {
+    //         cout << "Port read error" << endl;
+    //     }
+    //     if (kbhit()) {
+    //         cout << "Closing program" << endl;
+    //         return;
+    //     }
+    // }
 
 }
 
 void sendSide() {
+    // Discards the input buffer
+    fflush(stdin);
+
     char* test1 = "Heeeeeeeello there my deeeeeeeearrrr friend!";
 
     COMPort port = COMPort();
-    port.openPort("/dev/pts/6");
+    port.openPort("/dev/pts/7");
 
-    MessageManger mngr = MessageManger(0, 10);
+    MessageManger mngr = MessageManger(0, 2);
     mngr.setCOMPort(&port);
 
 
@@ -94,10 +104,13 @@ void sendSide() {
 
 
     while (mngr.tick()) {
-        sleep(2);
+        sleep(1);
+        // for (unsigned int i = 0; i != 0xfffff; i++) {
+        //     ; // wait
+        // }
     }
 
-    cout << "Program ended no isuuse hfesjf" << endl;
+    cout << "Sending ended with no isuuse" << endl;
 }
 
 

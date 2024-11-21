@@ -201,8 +201,6 @@ int Message::getHeader() {
 
     memcpy(&header, bufA, sizeof(MSGHeader));
 
-    printHeader();
-
     return 0;
 }
 

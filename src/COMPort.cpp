@@ -3,6 +3,11 @@
 #include <cstring>
 
 
+// defines timeout in terms of a number of bytes at a certain baud
+// if the time passes equivalent to the transmission of this number of bytes
+// this is considered a timeout
+#define TIMEOUT_IN_BYTES 20
+
 using namespace std;
 
 
@@ -31,9 +36,10 @@ using namespace std;
 
 #include <stdio.h>	
 #include <unistd.h>		// Unix standard functions
-#include <fcntl.h>		// File control funcitons
+#include <fcntl.h>		// File control funcitons and dynamic blocking/non-blocking switch
 #include <errno.h>		// Error number definitions
 #include <termios.h>	// POSIX terminal control definitions
+#include <sys/ioctl.h>
 #endif
 
 /*****************************************************************************
@@ -135,7 +141,6 @@ CPErrorCode COMPort::closePort() {
 }
 
 
-
 #ifdef _WIN32
 /*****************************************************************************
  * 							WINDOWS IMPLEMENTATION							 *
@@ -215,9 +220,20 @@ CPErrorCode COMPort::configPort() {
 	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Set the port for RAW input with no echo or other input signals
 	options.c_oflag &= ~OPOST;						// Use RAW output mode
 	options.c_cc[VMIN] = 0;							// Min # of chars to read. When 0 VTIME specifies the wait time for every character
-	options.c_cc[VTIME] = 240;						// Time in 1/10ths of a second to wait for every character before timing out. 
-													// If VTIME is set to 0 then reads will block forever (port will only read)
-	// Apply the new options to the port
+    
+    // options.c_cc[VTIME] = 240;						// Time in 1/10ths of a second to wait for every character before timing out. 
+    //                                                  // If VTIME is set to 0 then reads will block forever (port will only read)
+    
+    // number of 1/10ths of a second for a timeout to occur based on TIMEOUT_IN_BYTES
+    float timeout = 80 * TIMEOUT_IN_BYTES / (int) baud;
+    if (timeout < 1.0) {
+        options.c_cc[VTIME] = 1;
+    } else {
+        options.c_cc[VTIME] = (int)timeout;
+    }
+
+    
+    // Apply the new options to the port
 	tcsetattr(fd, TCSANOW, &options); 				// TCSANOW makes changes without waiting for data to complete
 
 
@@ -235,9 +251,10 @@ CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
     if (written != num_bytes) {
         cerr << "Warning! sent " << written << " bytes, but expected to send "
              << num_bytes << endl;
+        return CPErrorCode::WRITE_FAILED;
     }
-    cout << written << endl;
 
+    cout << "COM Port wrote " << written << " bytes" << endl;
     return CPErrorCode::SUCCESS;
 }
 
@@ -248,13 +265,87 @@ CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
         return CPErrorCode::READ_FAILED;
     }
 
-    cout << recBytes << endl;
+    cout << "COM Port read " << recBytes  << " bytes" << endl;
 
     if (recBytes == 0) {
         cerr << "Warning! Reading EOF" << endl;
+        return CPErrorCode::READ_FAILED;
     }
 
+    return CPErrorCode::SUCCESS;
+
+}
+
+
+CPErrorCode COMPort::setNonBlockingMode() {
+    if (!isPortOpen()) {
+        return CPErrorCode::PORT_IS_CLOSED;
+    }
+
+    // Enable non-blocking mode
+    int flags = fcntl(fd, F_GETFL, 0);
+    flags |= O_NONBLOCK;  // Set non-blocking flag
+    fcntl(fd, F_SETFL, flags);
     return CPErrorCode();
 }
+
+
+CPErrorCode COMPort::setBlockingMode() {
+    if (!isPortOpen()) {
+        return CPErrorCode::PORT_IS_CLOSED;
+    }
+    
+
+    // Enable blocking mode
+    int flags = fcntl(fd, F_GETFL, 0);
+    flags &= ~O_NONBLOCK;  // Clear non-blocking flag
+    fcntl(fd, F_SETFL, flags);
+
+}
+
+
+
+unsigned int COMPort::numInputBytes() {
+    int bytes_available = 0;
+    ioctl(fd, FIONREAD, &bytes_available);
+    
+    if (bytes_available > 0) {
+        return bytes_available;
+    } else {
+        return 0;
+    }
+
+}
+
+unsigned int COMPort::numOutputButes() {
+    int bytes_in_output_queue = 0;
+    ioctl(fd, TIOCOUTQ, &bytes_in_output_queue);
+
+    if (bytes_in_output_queue > 0) {
+        return bytes_in_output_queue;
+    } else {
+        return 0;
+    }
+
+
+    return 0;
+}
+
+
+bool COMPort::isPortOpen() {
+    struct termios tty;
+
+    if (tcgetattr(fd, &tty) == 0) {
+        // Port is open and valid
+        return true;
+    } else {
+        // Not a valid open port
+        return false;
+    }
+    
+}
+
+
+
 
 #endif

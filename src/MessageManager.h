@@ -46,7 +46,6 @@ public:
     /// @return 0 if all queues are empty, -1 if error, 1 if queues are not empty (no errors)
     int tick();
 
-
     void setCOMPort(COMPort* port) {
         this->port = port;
     }
