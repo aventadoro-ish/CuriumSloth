@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* Queue.h: Queue header file
  * Date: Oct 2024
  * Author:
@@ -6,8 +5,7 @@
  *         Besart Kalezic
  *
  */
-=======
->>>>>>> main
+
 #ifndef QUEUE_H
 #define QUEUE_H
 
@@ -141,11 +139,11 @@ void Queue<T>::traverseR(Node<T>* h, void(*visit)(Node<T>*)) {
     visit(h);
 }
 
-<<<<<<< HEAD
+
+
 // Function Prototypes
+
 
 int testQueue();
 
-=======
->>>>>>> main
 #endif

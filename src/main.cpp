@@ -6,7 +6,6 @@
  *         Gobind Matharu
  */
 
-<<<<<<< HEAD
 #include <iostream>
 #include <queue>
 #include <string>
@@ -18,64 +17,6 @@
 #include "MessageManager.h"
 
 #include "linux_utils.h"
-
-=======
-#include "sound.h"
-#include "Queue.h"
-#include <iostream>
-#include <stdio.h>
-#include <windows.h>
-
-int	main(int argc, char *argv[]) //change to test audio bring it into diagnostics into sub menu .h and .cpp into program and test it out
-{
-
-
-
-	extern short iBigBuf[];												// buffer
-	extern long  lBigBufSize;											// total number of samples
-	short* iBigBufNew = (short*)malloc(lBigBufSize*sizeof(short));		// buffer used for reading recorded sound from file
-
-	char save;
-	char replay;
-	char c;																// used to flush extra input
-	FILE* f;
-	
-	//-----------------------------------Queue Code with Template
-	Queue<int> q;
-	Node<int>* p;
-
-	// Initialize the queue
-	q.inItQueue();
-
-	// Add nodes with values from 1 to 10 to the queue
-	for (int i = 1; i <= 10; i++) {
-		p = new Node<int>();  // Allocate new node
-		p->Data = i;          // Set the data of the node
-		q.addToQueue(p);      // Add to the queue
-	}
-
-	// Print the queue before deletion
-	std::cout << "Queue before deletion of 7:" << std::endl;
-	q.traverse(q.returnHead(), visit);
-
-	// Value to be deleted
-	int valueToDelete = 7;
-
-	// Call deleteR to remove the node with the value 7
-	q.deleteR(q.returnHead(), q.returnHead()->pNext, valueToDelete);
-
-	// Print the queue after deletion
-	std::cout << "\nQueue after deletion of 7:" << std::endl;
-	q.traverse(q.returnHead(), visit);
-
-	p = new Node<int>();  // Allocate new node
-	p->Data = 7;          // Set the data of the node
-	q.addToQueue(p);
-	std::cout << "\nQueue after adding of 7:" << std::endl;
-	q.traverse(q.returnHead(), visit);
-
-	//----------------------------------------Queue Code
->>>>>>> main
 
 using namespace std;
 
