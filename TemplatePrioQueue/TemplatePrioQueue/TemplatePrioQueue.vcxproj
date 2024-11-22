@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{cfe06956-be1c-41f8-9d4a-40ec19bbc38b}</ProjectGuid>
-    <RootNamespace>CuriumSloth</RootNamespace>
+    <ProjectGuid>{0e744121-1146-448b-ac27-2cf2cf4bd317}</ProjectGuid>
+    <RootNamespace>TemplatePrioQueue</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -102,9 +102,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\gobind\Documents\CuriumSloth\src;${ProjectDir}\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,24 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\CmS_Sound.cpp" />
-    <ClCompile Include="src\COMPort.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\QueueTemp.cpp" />
-    <ClCompile Include="src\soundTest.cpp" />
-    <ClCompile Include="src\terminal.cpp" />
+    <ClCompile Include="PQHeap.tpp" />
+    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
-    <ClInclude Include="src\CmS_Sound.h" />
-    <ClInclude Include="src\COMPort.h" />
-    <ClInclude Include="src\Queue.h" />
-    <ClInclude Include="src\terminal.h" />
-=======
-    <ClInclude Include="CmS_Sound.h" />
-    <ClInclude Include="src\Queue.h" />
-    <ClInclude Include="src\sound.h" />
->>>>>>> main
+    <ClInclude Include="Item.h" />
+    <ClInclude Include="PQHeap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
