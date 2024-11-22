@@ -1,4 +1,4 @@
-/* main.cpp - Client for the Tx/Rx Program
+/* RS232test.cpp - Client for the Tx/Rx Program
  * 
  *
  */
@@ -37,7 +37,6 @@ COMMTIMEOUTS timeout;								// A commtimeout struct variable
 // Function to populate the queue with random quotes
 template <typename T>
 void populateQueue(Queue<T>& quoteQueue) {
-    // Step 1: Count the quotes and prepare indexing
     int numQuotes = fnumQuotes();
     if (numQuotes <= 0) {
         printf("Error: No quotes found in the file or file missing.\n");
@@ -47,29 +46,39 @@ void populateQueue(Queue<T>& quoteQueue) {
     long int* quoteIndices = fquoteIndices(numQuotes);
     int* quoteLengths = fquoteLength(numQuotes, quoteIndices);
 
-    if (!quoteIndices || !quoteLengths) {
-        printf("Error: Failed to index the quotes.\n");
-        free(quoteIndices);
-        free(quoteLengths);
-        return;
-    }
-
-    srand((unsigned int)time(NULL)); // Seed random number generator
-
-    // Enqueue random quotes
-    for (int i = 0; i < 10; ++i) { // Add 10 quotes to the queue as an example
-        int randIndex = frandNum(1, numQuotes); // Random index between 1 and numQuotes
-        char buffer[BUFSIZE];
-        int result = GetMessageFromFile(buffer, BUFSIZE, randIndex, numQuotes, quoteIndices, quoteLengths);
-        if (result == 0) {
-            string quote(buffer);
-            Node<T>* newNode = new Node<T>{ nullptr, quote }; // Create a new node
-            quoteQueue.addToQueue(newNode); // Add to the queue
+        // Validate `quoteIndices` and `quoteLengths` here
+        if (quoteIndices) {
+            for (int i = 0; i < numQuotes; i++) {
+                if (quoteIndices[i] < 0) {
+                    printf("Error: Invalid quote index %ld at position %d\n", quoteIndices[i], i);
+                }
+            }
         }
-    }
 
-    free(quoteIndices); // Clean up memory
-    free(quoteLengths);
+        if (quoteLengths) {
+            for (int i = 0; i < numQuotes; i++) {
+                if (quoteLengths[i] < 0 || quoteLengths[i] > MAX_QUOTE_LENGTH) {
+                    printf("Error: Invalid quote length %d at position %d\n", quoteLengths[i], i);
+                }
+            }
+        }
+
+        srand((unsigned int)time(NULL)); // Seed random number generator
+
+        // Enqueue random quotes
+        for (int i = 0; i < 10; ++i) { // Add 10 quotes to the queue as an example
+            int randIndex = frandNum(1, numQuotes); // Random index between 1 and numQuotes
+            char buffer[BUFSIZE];
+            int result = GetMessageFromFile(buffer, BUFSIZE, randIndex, numQuotes, quoteIndices, quoteLengths);
+            if (result == 0) {
+                string quote(buffer);
+                Node<T>* newNode = new Node<T>{ nullptr, quote }; // Create a new node
+                quoteQueue.addToQueue(newNode); // Add to the queue
+            }
+        }
+
+        free(quoteIndices); // Clean up memory
+        free(quoteLengths); // Clean up memory
 }
 
  // The client - A testing main that calls the functions below
@@ -97,7 +106,8 @@ int rs232test() {
 	string msgOut = quoteNode->Data; // Extract the message
     delete quoteNode; // Clean up the node
 
-    printf("\nSending Message: %s\n", msgOut.c_str());
+	// Transmit the message
+    printf("\nSending Message: \n%s\n", msgOut.c_str());
     outputToPort(&hComTx, msgOut.c_str(), msgOut.length() + 1); 
     Sleep(500);
 
@@ -105,9 +115,9 @@ int rs232test() {
     char msgIn[BUFSIZE];
     DWORD bytesRead = inputFromPort(&hComRx, msgIn, BUFSIZE);
     msgIn[bytesRead] = '\0';
-    printf("\nMessage Received: %s\n", msgIn);
+    printf("\nMessage Received: \n%s\n", msgIn);
 
-    // Tear down the COM link
+	// Clean up
     purgePort(&hComRx);
     purgePort(&hComTx);
     CloseHandle(hComRx);

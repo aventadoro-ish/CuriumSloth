@@ -125,6 +125,13 @@ long int* fquoteIndices(int numQuotes) {
 
 	}
 
+	// validate the quote starts
+	for (int i = 0; i < numQuotes; i++) {
+		if (quote_starts[i] < 0) {
+			printf("Error: Invalid quote index %ld at position %d\n", quote_starts[i], i);
+		}
+	}
+
 	fclose(file);
 
 	return quote_starts;
@@ -273,5 +280,4 @@ int GetMessageFromFile(
 
 	return 0;
 	
-
 }
