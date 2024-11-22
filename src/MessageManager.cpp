@@ -73,21 +73,30 @@ int MessageManger::transmitData(int receiverID,
         cout << "encoded message chuck " << i << endl;
     }
 
+    cout << "Transmission queued" << endl;
+
     Message* msg = new Message();
     void* start_idx =
         (void*)((unsigned long int)buf + ((num_msg - 1) * max_message_size));
     size_t len = bufLen - ((num_msg - 1) *
                          max_message_size);  // TODO: check for off-by-1 error
     msg->addData(start_idx, len);
+
+    cout << "Transmission queued" << endl;
     msg->describeData(senderID, receiverID,
                      generateMsgID(), 
                      type,
                      MSGEncryption::NONE,  // TODO: add a way to change that
                     comp
     );
+    cout << "Transmission queued" << endl;
     msg->encodeMessage();
+    cout << "Transmission queued" << endl;
+
 
     send_queue.push(msg);
+
+    cout << "Transmission queued" << endl;
 
     return 0;
 }
@@ -189,7 +198,9 @@ void MessageManger::listQueues() {
     while(!in_queue.isEmpty()) {
         Message* msg = in_queue.pop();
         cout << "Incomping Queue message: " << count++ << endl;
-        msg->printHeader(); 
+#ifndef DISABLE_HEADERS
+        msg->printHeader();
+#endif 
         tempQueue.push(msg);
     }
     
@@ -206,7 +217,9 @@ void MessageManger::listQueues() {
     while(!send_queue.isEmpty()) {
         Message* msg = send_queue.pop();
         cout << "Send message Queue: " << count++ << endl;
+#ifndef DISABLE_HEADERS
         msg->printHeader(); 
+#endif
         tempQueue.push(msg);
     }
     cout << "Total pending send messages:" << dec << count << endl;
@@ -229,6 +242,7 @@ void MessageManger::processIncoming()  {
     while(!in_queue.isEmpty()) {
         Message* msg = in_queue.pop();
 
+#ifndef DISABLE_HEADERS
         if (msg->getType() == MSGType::AUDIO) {
             total_payload_size += msg->getMessageSize();
             tempAQueue.push(msg);
@@ -238,7 +252,17 @@ void MessageManger::processIncoming()  {
             cout << "TEXT MESSAGE [" << msg->getOriginalSize() << " ]:" << text << endl;
         }
 
+#else
+        char* text = (char*)msg->getMessage();
+        text[msg->getOriginalSize()] = 0;
+        cout << "TEXT MESSAGE [" << msg->getOriginalSize() << " ]:" << text << endl;
+
+#endif
     }
+
+
+
+#ifndef DISABLE_HEADERS
 
     void* buf = malloc(total_payload_size);
     
@@ -254,6 +278,7 @@ void MessageManger::processIncoming()  {
     arp.setBuffer(buf, total_payload_size);
     arp.replayAudio();
 
+#endif
 
 
 }

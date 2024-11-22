@@ -372,6 +372,7 @@ size_t Message::getMessageSize() {
 
 
 void Message::printHeader() {
+#ifndef DISABLE_HEADERS
     cout << "Message header:" << endl;
     cout << "\tSender:      " << header.senderID << endl; 
     cout << "\tReceiver:    " << header.receiverID << endl; 
@@ -380,7 +381,12 @@ void Message::printHeader() {
     cout << "\tCompression: " << (int) header.compression << endl; 
     cout << "\tOriginal size:" << header.decompressedSize << endl; 
     cout << "\tPayload size:" << header.payloadSize << endl; 
+#else 
+    cout << "HEADERS DISABLED" << endl;
+#endif
+
 }
+
 
 
 
@@ -413,18 +419,20 @@ int Message::encodeMessage() {
         return -1;
     }
 
+
+#ifndef DISABLE_HEADERS
     if (header.encryption != MSGEncryption::NONE && encryptionKey == 0) {
         cerr << "WARNING! encrypting a message using the default key: 0" << endl;
     }
 
-#ifndef DISABLE_HEADERS
     if (encryptMessage()) { cerr << "ERROR! encrypt message failed!" << endl; }
     if (compressMessage()) { cerr << "ERROR! compress message failed!" << endl; }
     if (calculateChecksum()) { cerr << "ERROR! checksum calculation failed!" << endl; }
     if (prepareOutput()) { cerr << "ERROR! unable to prepare output!" << endl; }
 
 #else
-
+    cout << "encoding message without a header" << endl;
+    bufO = malloc(sizeA);
     memcpy(bufO, bufA, sizeA);
     sizeO = sizeA;
     free(bufA);
@@ -459,6 +467,8 @@ int Message::decodeMessage() {
     if (preparePayload()) { cerr << "ERROR! payload prep failed" << endl; }
 #else
 
+    cout << "decoding message without a header" << endl;
+    bufO = malloc(sizeA);
     memcpy(bufO, bufA, sizeA);
     sizeO = sizeA;
     free(bufA);
@@ -469,8 +479,10 @@ int Message::decodeMessage() {
     
 }
 
+#ifndef DISABLE_HEADERS
 int Message::getSenderID() {
     return header.senderID;
+
 }
 
 int Message::getReceiverID() {
@@ -496,3 +508,39 @@ unsigned int Message::getOriginalSize() {
 unsigned int Message::getPayloadSize() {
     return header.payloadSize;
 }
+
+
+#else
+
+int Message::getSenderID() {
+    return 0;
+
+}
+
+int Message::getReceiverID() {
+    return 0;
+}
+
+MSGType Message::getType() {
+    return MSGType::TEXT;
+}
+
+MSGCompression Message::getCompression() {
+    return MSGCompression::NONE;
+}
+
+MSGEncryption Message::getEncryption() {
+    return MSGEncryption::NONE;
+}
+
+unsigned int Message::getOriginalSize() {
+    if (sizeO != 0) return sizeO;
+    if (sizeA != 0) return sizeA;
+}
+
+unsigned int Message::getPayloadSize() {
+    if (sizeA != 0) return sizeA;
+    if (sizeO != 0) return sizeO;
+    
+}
+#endif

@@ -9,7 +9,7 @@
 #pragma once
 #include <stdio.h>	
 
-// #define DISABLE_HEADERS
+#define DISABLE_HEADERS
 
 enum class MSGType {
     TEXT,       // for plain text ascii
