@@ -211,6 +211,13 @@ int* fquoteLength(int numQuotes, long int* quoteIndices) {
 
 	}
 
+	// validate the quote lengths
+	for (int i = 0; i < numQuotes; i++) {
+		if (quote_lengths[i] < 0 || quote_lengths[i] > MAX_QUOTE_LENGTH) {
+			printf("Error: Invalid quote length %d at index %d\n", quote_lengths[i], i);
+		}
+	}
+
 	fclose(file);
 
 	return quote_lengths;
