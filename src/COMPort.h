@@ -4,6 +4,8 @@
 
 #ifdef _WIN32
 // TODO: !!! put Windows-specific stuff here !!! 
+#include <Windows.h>
+#include <string>
 #elif __linux__
 #include <termios.h>	// POSIX terminal control definitions
 
@@ -51,6 +53,8 @@ class COMPort {
 
 #ifdef _WIN32
     // TODO: !!! put Windows-specific member variables here !!! 
+    HANDLE hCom; // Windows handle for the COM port
+    COMMTIMEOUTS timeouts; // Timeout settings
 #elif __linux__
     // TODO: !!! put Windows-specific member variables here !!! 
     int fd; // file descriptor for the port
