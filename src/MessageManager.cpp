@@ -93,7 +93,8 @@ int MessageManger::transmitData(int receiverID,
 
 
 int MessageManger::tick() {
-    if (!send_queue.isEmpty()) {
+    // if there is stuff to send and ouput buffer is empty
+    if (!send_queue.isEmpty() && port->numOutputButes() == 0) {
         //  && port->numOutputButes() == 00
         
         Message* msg = send_queue.pop();
@@ -113,8 +114,9 @@ int MessageManger::tick() {
         free(msg);
     }
 
-    // This method of receiving messages only works for blocking reads
+    // This method of 0receiving messages only works for blocking reads
     if (port->numInputBytes() > 0) {
+        // >= getBufferSize()
         void* buf = (void*)malloc(getBufferSize());
 
         port->receiveMessage(buf, getBufferSize());
@@ -125,7 +127,7 @@ int MessageManger::tick() {
 
         char* text = (char*)incoming.getMessage();
         text[incoming.getOriginalSize()] = 0;
-        cout << "RECEIVING MESSAGE:" << text << endl;
+        cout << "RECEIVING MESSAGE [" << incoming.getOriginalSize() << " ]:" << text << endl;
     }
 
   

@@ -47,11 +47,13 @@ void recSide() {
 
 
     COMPort port = COMPort();
-    while(port.openPort("/dev/pts/12") != CPErrorCode::SUCCESS) {
+    while(port.openPort("/dev/ttyUSB1") != CPErrorCode::SUCCESS) {
         ;
     }
     
-    MessageManger mngr = MessageManger(0, 10);
+
+    
+    MessageManger mngr = MessageManger(1, 5);
     mngr.setCOMPort(&port);
 
     // while (mngr.tick()) {
@@ -88,12 +90,14 @@ void sendSide() {
     // Discards the input buffer
     fflush(stdin);
 
-    char* test1 = "Heeeeeeeello there my deeeeeeeearrrr friend!";
+    char* test1 = "Heeeeeeeello there my deeeeeeeeeearrrr friend!";
 
     COMPort port = COMPort();
-    port.openPort("/dev/pts/7");
+    while(port.openPort("/dev/ttyUSB0") != CPErrorCode::SUCCESS) {
+        ;
+    }
 
-    MessageManger mngr = MessageManger(0, 2);
+    MessageManger mngr = MessageManger(0, 5);
     mngr.setCOMPort(&port);
 
 
@@ -104,7 +108,7 @@ void sendSide() {
 
 
     while (mngr.tick()) {
-        sleep(1);
+        sleep(3);
         // for (unsigned int i = 0; i != 0xfffff; i++) {
         //     ; // wait
         // }

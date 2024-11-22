@@ -6,7 +6,7 @@
 // defines timeout in terms of a number of bytes at a certain baud
 // if the time passes equivalent to the transmission of this number of bytes
 // this is considered a timeout
-#define TIMEOUT_IN_BYTES 20
+#define TIMEOUT_IN_BYTES 3000
 
 using namespace std;
 
@@ -83,7 +83,7 @@ CPErrorCode COMPort::openPort(char* port_name) {
 
 
 #if defined(__linux__)
-    fd = open(port_name, O_RDWR | O_NOCTTY | O_NDELAY);	// Open for reading and writing, not as controlling terminal, no delay (no sleep - keep awake) (see Source 1)
+    fd = open(port_name, O_RDWR | O_NOCTTY); // | O_NDELAY);	// Open for reading and writing, not as controlling terminal, no delay (no sleep - keep awake) (see Source 1)
 	if (fd == -1) {
 		perror("\nError: could not open specified port\n"); 
         return CPErrorCode::PARAMETER_ERROR;
@@ -228,8 +228,10 @@ CPErrorCode COMPort::configPort() {
     float timeout = 80 * TIMEOUT_IN_BYTES / (int) baud;
     if (timeout < 1.0) {
         options.c_cc[VTIME] = 1;
+        cout << "configPort() delay was clamped to 1" << endl;
     } else {
         options.c_cc[VTIME] = (int)timeout;
+        cout << "configPort() delay was set to " << (int)timeout << endl;
     }
 
     
@@ -259,20 +261,42 @@ CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
 }
 
 CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
-    int recBytes = read(fd, buf, bufSize);
-    if (recBytes < 0) {
-        cerr << "Failed to read message from comPort" << endl;
+    size_t bytesReceived = 0;
+    
+    while (bytesReceived < bufSize) {
+        int recBytes = read(fd, buf + bytesReceived, bufSize - bytesReceived);
+
+        if (recBytes < 0) {     // error
+            cerr << "Failed to read message from comPort" << endl;
+            return CPErrorCode::READ_FAILED;
+        } else if (recBytes == 0) { // timeout
+            break;
+        }
+
+        bytesReceived += recBytes;
+    }
+
+    if (bytesReceived > 0) {
+        cout << "COM Port read " << bytesReceived  << " bytes" << endl;
+        return CPErrorCode::SUCCESS;
+    } else {
+        // nothing was received
         return CPErrorCode::READ_FAILED;
     }
 
-    cout << "COM Port read " << recBytes  << " bytes" << endl;
 
-    if (recBytes == 0) {
-        cerr << "Warning! Reading EOF" << endl;
-        return CPErrorCode::READ_FAILED;
-    }
 
-    return CPErrorCode::SUCCESS;
+    // int recBytes = read(fd, buf, bufSize);
+    // if (recBytes < 0) {
+    //     cerr << "Failed to read message from comPort" << endl;
+    //     return CPErrorCode::READ_FAILED;
+    // }
+    // cout << "COM Port read " << recBytes  << " bytes" << endl;
+    // if (recBytes == 0) {
+    //     cerr << "Warning! Reading EOF" << endl;
+    //     return CPErrorCode::READ_FAILED;
+    // }
+    // return CPErrorCode::SUCCESS;
 
 }
 
