@@ -30,6 +30,10 @@ class MessageManger {
 
 
 public:
+
+    MSGCompression comp = MSGCompression::NONE;
+
+
     MessageManger(int senderID, size_t max_msg_size = 0x3fff);
     ~MessageManger();
 
@@ -59,5 +63,10 @@ public:
         return max_message_size + sizeof(MSGHeader) + sizeof(MSGFooter);
     }
 
+    /// @brief temp function
+    void listQueues();
+
+    /// @brief Temp function
+    void processIncoming();
 
 };

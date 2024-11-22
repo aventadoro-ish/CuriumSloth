@@ -60,7 +60,7 @@ int MessageManger::transmitData(int receiverID,
                         generateMsgID(),
                         type,
                         MSGEncryption::NONE,  // TODO: add a way to change that
-                        MSGCompression::NONE  // ... and this too ...
+                        comp
         );
 
         if (msg->encodeMessage()) {
@@ -83,7 +83,7 @@ int MessageManger::transmitData(int receiverID,
                      generateMsgID(), 
                      type,
                      MSGEncryption::NONE,  // TODO: add a way to change that
-                     MSGCompression::NONE  // ... and this too ...
+                    comp
     );
     msg->encodeMessage();
 
@@ -126,11 +126,12 @@ int MessageManger::tick() {
 
         in_queue.push(incoming);
 
+#ifndef DISABLE_HEADERS
         if (incoming->getType() == MSGType::AUDIO) {
-            if (incoming->getSenderID() != 0 ||
-                incoming->getReceiverID() != 1) {
-                    cout << "fault************************" << endl;
-                }
+            // if (incoming->getSenderID() != 0 ||
+            //     incoming->getReceiverID() != 1) {
+            //         cout << "fault************************" << endl;
+            //     }
 
 
         } else if (incoming->getType() == MSGType::TEXT) {
@@ -139,6 +140,9 @@ int MessageManger::tick() {
             cout << "RECEIVING TEXT MESSAGE [" << incoming->getOriginalSize() << " ]:" << text << endl;
 
         }
+#else
+
+#endif
 
     }
 
@@ -177,4 +181,79 @@ void MessageManger::replayAudio() {
 }
 
 
+void MessageManger::listQueues() {
+    QueueProper<Message> tempQueue = QueueProper<Message>();
+    cout << "RECEIVE QUEUE:" << endl;
 
+    int count = 0;
+    while(!in_queue.isEmpty()) {
+        Message* msg = in_queue.pop();
+        cout << "Incomping Queue message: " << count++ << endl;
+        msg->printHeader(); 
+        tempQueue.push(msg);
+    }
+    
+    while (!tempQueue.isEmpty()) {
+        Message* msg = tempQueue.pop();
+        in_queue.push(msg);
+    }
+    cout << "Total incoming messages:" << dec << count << endl;
+
+    cout << endl << endl << endl;
+    cout << "SEND QUEUE:" << endl;
+
+    count = 0;
+    while(!send_queue.isEmpty()) {
+        Message* msg = send_queue.pop();
+        cout << "Send message Queue: " << count++ << endl;
+        msg->printHeader(); 
+        tempQueue.push(msg);
+    }
+    cout << "Total pending send messages:" << dec << count << endl;
+
+    
+    while (!tempQueue.isEmpty()) {
+        Message* msg = tempQueue.pop();
+        in_queue.push(msg);
+    }
+
+}
+
+
+void MessageManger::processIncoming()  {
+    QueueProper<Message> tempAQueue = QueueProper<Message>();
+    QueueProper<Message> tempTQueue = QueueProper<Message>();
+
+
+    size_t total_payload_size = 0;
+    while(!in_queue.isEmpty()) {
+        Message* msg = in_queue.pop();
+
+        if (msg->getType() == MSGType::AUDIO) {
+            total_payload_size += msg->getMessageSize();
+            tempAQueue.push(msg);
+        } else if (msg->getType() == MSGType::TEXT) {
+            char* text = (char*)msg->getMessage();
+            text[msg->getOriginalSize()] = 0;
+            cout << "TEXT MESSAGE [" << msg->getOriginalSize() << " ]:" << text << endl;
+        }
+
+    }
+
+    void* buf = malloc(total_payload_size);
+    
+    size_t idx = 0;
+    while (!tempAQueue.isEmpty()) {
+        Message* msg = tempAQueue.pop();
+
+        memcpy(buf + idx, msg->getMessage(), msg->getMessageSize());
+        in_queue.push(msg);
+    }
+    
+    AudioRecorder arp = AudioRecorder();
+    arp.setBuffer(buf, total_payload_size);
+    arp.replayAudio();
+
+
+
+}

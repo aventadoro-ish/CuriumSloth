@@ -284,6 +284,8 @@ void AudioRecorder::closePlayback() {
 /*****************************************************************************
  * 							LINUX IMPLEMENTATION							 *
  *****************************************************************************/
+void log_hw_params(snd_pcm_hw_params_t* hwparams, snd_pcm_t* pcm_handle);
+
 
 int AudioRecorder::initializeRecording() {
 	int i = prepareStream(&pcm_handle_Capture, stream_Capture, &hwparams_Capture, pcm_name_Capture);
@@ -293,10 +295,16 @@ int AudioRecorder::initializeRecording() {
 int AudioRecorder::recordBuffer() {
 	int BYTES_PER_FRAME = (recNumCh * recBitsPerSample / 8);      		// = 4 for 16 bit stereo
 	int FRAMES_IN_BIG_BUF = recBufSize / BYTES_PER_FRAME;
+
+	long unsigned int desired_buffer_size = FRAMES_IN_BIG_BUF; // Total frames
+	if (snd_pcm_hw_params_set_buffer_size_near(pcm_handle_Capture, hwparams_Capture, &desired_buffer_size) < 0) {
+		std::cerr << "Failed to set buffer size" << std::endl;
+	}
 	size_t framesR = 0;  
 	size_t max = 0; 
 	
-	readbuf(pcm_handle_Capture, (char *)recBuf, FRAMES_IN_BIG_BUF, &framesR, &max);
+	readbuf(pcm_handle_Capture, (char *)recBuf, desired_buffer_size, &framesR, &max);
+	// readbuf(pcm_handle_Capture, (char *)recBuf, FRAMES_IN_BIG_BUF, &framesR, &max);
 	// readbuf(pcm_handle_Capture, (char *)recBuf, recBufSize, &framesR, &max);
 	
 	cout << "recordBuffer() recorded " << framesR << "frames" << endl;
@@ -316,8 +324,19 @@ int AudioRecorder::playBuffer() {
 
 	int BYTES_PER_FRAME = (recNumCh * recBitsPerSample / 8);      		// = 4 for 16 bit stereo
 	int FRAMES_IN_BIG_BUF = recBufSize / BYTES_PER_FRAME;
+	long unsigned int desired_buffer_size = FRAMES_IN_BIG_BUF; // Total frames
+	// if (snd_pcm_hw_params_set_buffer_size_near(pcm_handle_Playback, hwparams_Playback, &desired_buffer_size) < 0) {
+	// 	std::cerr << "Failed to set buffer size" << std::endl;
+	// }
+
+	// long unsigned int period_size = desired_buffer_size / PERIODS_PER_HW_BUF; 
+	// if (snd_pcm_hw_params_set_period_size_near(pcm_handle_Playback, hwparams_Playback, &period_size, 0) < 0) {
+	// 	std::cerr << "Failed to set period size" << std::endl;
+	// }
 	size_t framesW = 0;  
-	writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, FRAMES_IN_BIG_BUF, &framesW);
+
+	writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, desired_buffer_size, &framesW);
+	// writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, FRAMES_IN_BIG_BUF, &framesW);
 	// writebuf(pcm_handle_Playback, (AudioBufT*)recBuf, recBufSize, &framesW);
 	cout << "playBuffer() replayed " << framesW << "frames" << endl;
 
@@ -386,7 +405,11 @@ int AudioRecorder::prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream
 	}
 
 	// Set number of periods per hardware buffer (a.k.a. 'fragments')
-	if(snd_pcm_hw_params_set_periods(*pcm_handle, *hwparams, (unsigned int)PERIODS_PER_HW_BUF, 0) < 0 ) {
+	// if(snd_pcm_hw_params_set_periods(*pcm_handle, *hwparams, 200, 0) < 0 ) {
+	int periods_per_hw_buffer = BYTES_PER_HW_BUF / 2048;
+	cout << "Periords per HW buffer = " << periods_per_hw_buffer << endl;
+	if(snd_pcm_hw_params_set_periods(*pcm_handle, *hwparams, (unsigned int)periods_per_hw_buffer, 0) < 0 ) {
+	// if(snd_pcm_hw_params_set_periods(*pcm_handle, *hwparams, (unsigned int)PERIODS_PER_HW_BUF, 0) < 0 ) {
 		fprintf(stderr, "Error setting periods\n");
 		return(-1);
 	}
@@ -407,6 +430,9 @@ int AudioRecorder::prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream
 		fprintf(stderr, "Error setting HW params.\n");
 		return(-1);
 	}
+
+	log_hw_params(*hwparams, *pcm_handle);
+
 
 	//printf("End of prepare stream function\n");				// Test success
 	return(0);  // Success
@@ -442,14 +468,53 @@ long AudioRecorder::writebuf(snd_pcm_t *handle, char *buf, long len, size_t *fra
         r = snd_pcm_writei(handle, buf, len);		
         if (r == -EAGAIN)
             continue;
-        //printf("write = %li\n", r);
-        if (r < 0)
+        printf("write = %li\n", r);
+        if (r < 0) {
+			snd_pcm_recover(handle, r, 1); // Recover from underrun
+			std::cerr << "Underrun occurred, recovered" << std::endl;
             return r;
+		}
         buf += r * frame_bytes;
         len -= r;
         *frames += r;
     }
     return 0;
+}
+
+
+void log_hw_params(snd_pcm_hw_params_t* hwparams, snd_pcm_t* pcm_handle) {
+    unsigned int rate;
+    int dir;
+    unsigned int channels;
+    snd_pcm_uframes_t buffer_size, period_size;
+
+    // Get the sample rate
+    if (snd_pcm_hw_params_get_rate(hwparams, &rate, &dir) >= 0) {
+        std::cout << "Sample rate: " << rate << " Hz" << std::endl;
+    } else {
+        std::cerr << "Unable to get sample rate." << std::endl;
+    }
+
+    // Get the number of channels
+    if (snd_pcm_hw_params_get_channels(hwparams, &channels) >= 0) {
+        std::cout << "Channels: " << channels << std::endl;
+    } else {
+        std::cerr << "Unable to get number of channels." << std::endl;
+    }
+
+    // Get the buffer size in frames
+    if (snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size) >= 0) {
+        std::cout << "Buffer size: " << buffer_size << " frames" << std::endl;
+    } else {
+        std::cerr << "Unable to get buffer size." << std::endl;
+    }
+
+    // Get the period size in frames
+    if (snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir) >= 0) {
+        std::cout << "Period size: " << period_size << " frames" << std::endl;
+    } else {
+        std::cerr << "Unable to get period size." << std::endl;
+    }
 }
 
 

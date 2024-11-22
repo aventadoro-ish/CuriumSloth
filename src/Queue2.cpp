@@ -19,7 +19,6 @@ inline QueueProper<T>::QueueProper() {
 template <typename T>
 QueueProper<T>::~QueueProper() {
 
-
 }
 
 template <typename T>
@@ -82,6 +81,19 @@ bool QueueProper<T>::isEmpty() {
     return head == nullptr; // && tail == nullptr;
 }
 
+
+template <typename T>
+unsigned int QueueProper<T>::count() {
+    Node2<T>* node = head;
+    
+    unsigned int cnt = 0;
+    while(head != nullptr) {
+        cnt += 1;
+        head = head->pNext;
+    }
+
+    return cnt;
+}
 
 // for compiling Queue<Message>
 template class QueueProper<Message>;

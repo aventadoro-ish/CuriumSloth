@@ -45,5 +45,7 @@ public:
     bool isEmpty();
 
 
+    unsigned int count();
+
 };
 

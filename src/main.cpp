@@ -98,8 +98,16 @@ void sendSide() {
 
     char* test1 = "Heeeeeeeello there my deeeeeeeeeearrrr friend!";
 
+    string comPath = string("/dev/ttyUSB");
+    cout << "Enter com port number: ";
+    char ch = getchar();
+    cout << endl;
+
+    comPath = comPath + ch;
+    cout << "COM Port selected is: " << comPath << endl;
+
     COMPort port = COMPort(COMPortBaud::COM_BAUD_57600, CPParity::NONE, 1);
-    while(port.openPort("/dev/ttyUSB0") != CPErrorCode::SUCCESS) {
+    while(port.openPort((char*)comPath.c_str()) != CPErrorCode::SUCCESS) {
         ;
     }
     cout << "Port timeout ms is " << port.getTimeoutMs() << endl;
@@ -107,20 +115,78 @@ void sendSide() {
     MessageManger mngr = MessageManger(0, maxMsgSize);
     mngr.setCOMPort(&port);
 
-    cout << "Recording audio..." << endl;
-    AudioRecorder arr = AudioRecorder();
-    arr.recordAudio(5);
-    cout << "recorded " << arr.getBufferSize() << " bytes @" << arr.getBuffer() << endl;
-    cout << "Confirm audio..." << endl;
-    arr.replayAudio();
+    // cout << "Recording audio..." << endl;
+    // AudioRecorder arr = AudioRecorder();
+    // arr.recordAudio(2);
+    // cout << "recorded " << arr.getBufferSize() << " bytes @" << arr.getBuffer() << endl;
+    // cout << "Confirm audio..." << endl;
+    // arr.replayAudio();
 
-    mngr.transmitData(1, MSGType::AUDIO, arr.getBuffer(), arr.getBufferSize());
-
-
-    cout << endl << endl << endl;
+    // mngr.transmitData(1, MSGType::AUDIO, arr.getBuffer(), arr.getBufferSize());
 
 
-    while (mngr.tick()) {
+    //cout << endl << endl << endl;
+
+    MSGCompression compress = MSGCompression::NONE;
+
+    while (true) {
+        mngr.tick();
+
+        if (kbhit()) {
+            char cmd = getchar();
+
+            if (cmd == 'w') {
+                // send message
+                cout << "Enter your message: " << endl;
+                string text;
+                getline(cin, text);
+                mngr.transmitData(0, MSGType::TEXT, (char*)text.c_str(), text.length() + 1);
+
+            }
+
+            if (cmd == 'a') {
+                AudioRecorder ar = AudioRecorder();
+                cout << "Record your audio message...";
+                ar.recordAudio(10);
+                cout << "Verify your audio message...";
+                ar.replayAudio();
+                void* tmp = malloc(ar.getBufferSize());
+                memcpy(tmp, ar.getBuffer(), ar.getBufferSize());
+
+                mngr.transmitData(0, MSGType::AUDIO, tmp, ar.getBufferSize());
+            
+            }
+
+            if (cmd == 'q') {
+                cout << "Leaving program" << endl;
+                // exit
+                break;
+            }
+
+            if (cmd == 'p') {
+                // list queues
+                mngr.listQueues();
+
+            }
+
+            if (cmd == 'f') {
+                // flush incoming queue
+                mngr.processIncoming();
+            }
+
+            if (cmd == 'c') {
+                if (compress == MSGCompression::NONE) {
+                    compress = MSGCompression::RLE;
+                    cout << "Compression ON (RLE)" << endl;
+                }
+                else if (compress == MSGCompression::RLE) {
+                    compress = MSGCompression::NONE;
+                    cout << "Compression OFF (RLE)" << endl;
+                }
+                mngr.comp = compress;
+            }
+
+        }
         // sleep(3);
         // for (unsigned int i = 0; i != 0xfffff; i++) {
         //     ; // wait
@@ -133,20 +199,27 @@ void sendSide() {
 
 int main() {
     // soundTest();
+    // AudioRecorder ar = AudioRecorder();
+    // cout << "Talk" << endl;
+    // ar.recordAudio(10);
+    // cout << "Listen" << endl;
+    // ar.replayAudio();
 
-    int cmd;
-    cin >> cmd;
-    if (cmd == 0) {
-        getchar();
+    sendSide();
 
-        recSide();
-    } else if (cmd == 1) {
-        getchar();
+    // int cmd;
+    // cin >> cmd;
+    // if (cmd == 0) {
+    //     getchar();
 
-        sendSide();
-    } else {
-        return 0;
-    }
+    //     recSide();
+    // } else if (cmd == 1) {
+    //     getchar();
+
+    //     sendSide();
+    // } else {
+    //     return 0;
+    // }
 
 
 

@@ -417,13 +417,21 @@ int Message::encodeMessage() {
         cerr << "WARNING! encrypting a message using the default key: 0" << endl;
     }
 
+#ifndef DISABLE_HEADERS
     if (encryptMessage()) { cerr << "ERROR! encrypt message failed!" << endl; }
     if (compressMessage()) { cerr << "ERROR! compress message failed!" << endl; }
     if (calculateChecksum()) { cerr << "ERROR! checksum calculation failed!" << endl; }
     if (prepareOutput()) { cerr << "ERROR! unable to prepare output!" << endl; }
 
-    // printHeader();
+#else
 
+    memcpy(bufO, bufA, sizeA);
+    sizeO = sizeA;
+    free(bufA);
+    sizeA = 0;
+
+#endif
+    // printHeader();
     // cout << sizeO << endl;
     // printHexDump(bufO, sizeO);
 
@@ -443,13 +451,19 @@ int Message::decodeMessage() {
         return -1;
     }
 
+#ifndef DISABLE_HEADERS
     if (getHeader()) { cerr << "ERROR! Unable to read header of the message" << endl; }
     printHeader();
     if (decompressMessage()) { cerr << "ERROR! decompress message failed" << endl; }
     if (decryptMessage()) { cerr << "ERROR! decrypt message failed" << endl; }
     if (preparePayload()) { cerr << "ERROR! payload prep failed" << endl; }
-        
+#else
 
+    memcpy(bufO, bufA, sizeA);
+    sizeO = sizeA;
+    free(bufA);
+    sizeA = 0;
+#endif
 
     return 0;
     
