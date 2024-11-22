@@ -45,7 +45,9 @@ void recSide() {
     fflush(stdin);
 
 
-    COMPort port = COMPort();
+    // COMPort port = COMPort();
+    COMPort port = COMPort(COMPortBaud::COM_BAUD_115200, CPParity::NONE, 1);
+
     while(port.openPort("/dev/ttyUSB1") != CPErrorCode::SUCCESS) {
         ;
     }
@@ -91,7 +93,7 @@ void sendSide() {
 
     char* test1 = "Heeeeeeeello there my deeeeeeeeeearrrr friend!";
 
-    COMPort port = COMPort();
+    COMPort port = COMPort(COMPortBaud::COM_BAUD_115200, CPParity::NONE, 1);
     while(port.openPort("/dev/ttyUSB0") != CPErrorCode::SUCCESS) {
         ;
     }
