@@ -23,12 +23,12 @@ int	soundTest() {
 	AudioRecorder aRec = AudioRecorder(44200, 16);
 	std::cout << "Recording audio for 10 seconds: " << std::endl;
 	aRec.recordAudio(10);											// record for 10 seconds
-	short* buf = aRec.getBuffer();
+	void* buf = aRec.getBuffer();
 	uint32_t bufLen = aRec.getBufferSize();
 
 
-	short* newBuf = (short*)malloc(bufLen * sizeof(short));
-	memcpy(newBuf, buf, bufLen * sizeof(short));
+	void* newBuf = (void*)malloc(bufLen );
+	memcpy(newBuf, buf, bufLen);
 
 
 	AudioRecorder aReplayer = AudioRecorder(44200, 16);
@@ -53,7 +53,7 @@ int	soundTest() {
             return 0;
         }
         std::cout << "Writing to sound file ...\n";
-        fwrite(buf, sizeof(short), bufLen, f);
+        fwrite(buf, sizeof(char), bufLen, f);
         fclose(f);
     }
 
@@ -70,7 +70,7 @@ int	soundTest() {
         }
 
         // Allocate memory for a new buffer to read the saved data
-        short* fileBuf = (short*)malloc(bufLen * sizeof(short));
+        void* fileBuf = (void*)malloc(bufLen);
         fread(fileBuf, sizeof(short), bufLen, f);
         fclose(f);
 

@@ -12,7 +12,7 @@
 
 using namespace std;
 
-void recSide() {
+void testMessageManagerRecSide() {
 
     // Discards the input buffer
     fflush(stdin);
@@ -60,7 +60,7 @@ void recSide() {
 
 }
 
-void sendSide() {
+void testMessageManagerSendSide() {
     // Discards the input buffer
     fflush(stdin);
 

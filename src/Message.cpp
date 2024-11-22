@@ -7,6 +7,7 @@
 
 #include "Compression.h"
 #include "Encryption.h"
+#include "linux_utils.h"
 
 using namespace std;
 
@@ -327,7 +328,6 @@ int Message::addData(void* buf, size_t size, bool encode) {
         cerr << "ERROR! Trying to reallocate message data buffer!" << endl;
         return -1;
     }
-
     bufA = (void*)malloc(size);
     sizeA = size;
     if (!bufA) {
@@ -444,6 +444,7 @@ int Message::decodeMessage() {
     }
 
     if (getHeader()) { cerr << "ERROR! Unable to read header of the message" << endl; }
+    printHeader();
     if (decompressMessage()) { cerr << "ERROR! decompress message failed" << endl; }
     if (decryptMessage()) { cerr << "ERROR! decrypt message failed" << endl; }
     if (preparePayload()) { cerr << "ERROR! payload prep failed" << endl; }
@@ -480,39 +481,4 @@ unsigned int Message::getOriginalSize() {
 
 unsigned int Message::getPayloadSize() {
     return header.payloadSize;
-}
-
-void printHexDump(void* buf, size_t size) {
-    unsigned char* data = static_cast<unsigned char*>(buf);
-
-    for (size_t i = 0; i < size; i += 16) {
-        // Print the offset in hex
-        std::cout << std::setw(8) << std::setfill('0') << std::hex << i << ": ";
-
-        // Print hex bytes
-        for (size_t j = 0; j < 16; ++j) {
-            if (i + j < size) {
-                std::cout << std::setw(2) << static_cast<unsigned>(data[i + j]) << " ";
-            } else {
-                std::cout << "   "; // Fill space for alignment
-            }
-        }
-
-        // Print ASCII characters
-        std::cout << " |";
-        for (size_t j = 0; j < 16; ++j) {
-            if (i + j < size) {
-                char c = data[i + j];
-                if (std::isprint(static_cast<unsigned char>(c))) {
-                    std::cout << c;
-                } else {
-                    std::cout << '.';
-                }
-            }
-        }
-        std::cout << "|" << std::endl;
-    }
-
-    // Reset the formatting
-    std::cout << std::dec;
 }

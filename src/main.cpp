@@ -38,15 +38,15 @@ void setSampleRate();
 
 // Global message queue definition
 queue<string> messageQueue;
+size_t maxMsgSize = 1000;
 
 void recSide() {
 
     // Discards the input buffer
     fflush(stdin);
 
-
     // COMPort port = COMPort();
-    COMPort port = COMPort(COMPortBaud::COM_BAUD_115200, CPParity::NONE, 1);
+    COMPort port = COMPort(COMPortBaud::COM_BAUD_57600, CPParity::NONE, 1);
 
     while(port.openPort("/dev/ttyUSB1") != CPErrorCode::SUCCESS) {
         ;
@@ -54,7 +54,7 @@ void recSide() {
     
 
     
-    MessageManger mngr = MessageManger(1, 5);
+    MessageManger mngr = MessageManger(1, maxMsgSize);
     mngr.setCOMPort(&port);
 
     // while (mngr.tick()) {
@@ -66,6 +66,10 @@ void recSide() {
             break;
         }
     }
+
+    mngr.replayAudio();
+
+
 
 
     // size_t buf_size = 500;
@@ -88,22 +92,29 @@ void recSide() {
 }
 
 void sendSide() {
+
     // Discards the input buffer
     fflush(stdin);
 
     char* test1 = "Heeeeeeeello there my deeeeeeeeeearrrr friend!";
 
-    COMPort port = COMPort(COMPortBaud::COM_BAUD_115200, CPParity::NONE, 1);
+    COMPort port = COMPort(COMPortBaud::COM_BAUD_57600, CPParity::NONE, 1);
     while(port.openPort("/dev/ttyUSB0") != CPErrorCode::SUCCESS) {
         ;
     }
     cout << "Port timeout ms is " << port.getTimeoutMs() << endl;
 
-    MessageManger mngr = MessageManger(0, 5);
+    MessageManger mngr = MessageManger(0, maxMsgSize);
     mngr.setCOMPort(&port);
 
+    cout << "Recording audio..." << endl;
+    AudioRecorder arr = AudioRecorder();
+    arr.recordAudio(5);
+    cout << "recorded " << arr.getBufferSize() << " bytes @" << arr.getBuffer() << endl;
+    cout << "Confirm audio..." << endl;
+    arr.replayAudio();
 
-    mngr.transmitData(1, MSGType::TEXT, test1, strlen(test1) + 1);
+    mngr.transmitData(1, MSGType::AUDIO, arr.getBuffer(), arr.getBufferSize());
 
 
     cout << endl << endl << endl;
@@ -121,6 +132,8 @@ void sendSide() {
 
 
 int main() {
+    // soundTest();
+
     int cmd;
     cin >> cmd;
     if (cmd == 0) {

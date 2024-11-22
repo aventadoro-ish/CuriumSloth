@@ -1,12 +1,13 @@
 #include "COMPort.h"
 #include <iostream>
 #include <cstring>
+#include "linux_utils.h"
 
 
 // defines timeout in terms of a number of bytes at a certain baud
 // if the time passes equivalent to the transmission of this number of bytes
 // this is considered a timeout
-#define TIMEOUT_IN_BYTES 100
+#define TIMEOUT_IN_BYTES 2000
 
 using namespace std;
 
@@ -94,7 +95,7 @@ CPErrorCode COMPort::openPort(char* port_name) {
                                                 // Block (wait) until characters come in or interval timer expires
 
     configPort();
-
+    tcflush(fd, TCIFLUSH);
 #endif
 
 
@@ -107,6 +108,8 @@ CPErrorCode COMPort::sendMessage(void* buf, unsigned int num_bytes) {
     if (!is_port_open) {
         return CPErrorCode::PORT_IS_CLOSED;
     }
+
+    // printHexDump(buf, num_bytes);
 
     writeToPort(buf, num_bytes);
 
@@ -142,7 +145,8 @@ CPErrorCode COMPort::closePort() {
 }
 
 unsigned int COMPort::getTimeoutMs() {
-    float timeout = 8 * TIMEOUT_IN_BYTES / (unsigned int)baud * 1000;
+    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
+    double timeout = num_bits_per_byte * TIMEOUT_IN_BYTES * 1000 / (unsigned int)baud;
     return ceil(timeout);
 }
 
@@ -232,12 +236,13 @@ CPErrorCode COMPort::configPort() {
     
     // number of 1/10ths of a second for a timeout to occur based on TIMEOUT_IN_BYTES
     float timeout = 80 * TIMEOUT_IN_BYTES / (int) baud;
+    timeout = 0.9; // TODO: fix
     if (timeout < 1.0) {
         options.c_cc[VTIME] = 1;
         cout << "configPort() delay was clamped to 1" << endl;
     } else {
-        options.c_cc[VTIME] = (int)timeout;
-        cout << "configPort() delay was set to " << (int)timeout << endl;
+        options.c_cc[VTIME] = ceil(timeout);
+        cout << "configPort() delay was set to " << ceil(timeout) << endl;
     }
 
     
@@ -253,11 +258,12 @@ CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
     // estimate the transmission time
     // 8 bits + parity if enabled + start bit + stop bits
     int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
-    double transmission_time = num_bits_per_byte / (int)baud * num_bytes;
-
+    double transmission_time = num_bits_per_byte * num_bytes * 3.0 / (int)baud ;
+    transmission_time += getTimeoutMs() / 1000.0;
     last_transmission_end = chrono::steady_clock::now() +
                             chrono::duration_cast<chrono::steady_clock::duration>(
                                     chrono::duration<double>(transmission_time));
+    cout << "Transmission time = " << transmission_time << endl;
 
 
     int written = write(fd, buf, num_bytes);
@@ -272,7 +278,7 @@ CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
         return CPErrorCode::WRITE_FAILED;
     }
 
-    cout << "COM Port wrote " << written << " bytes" << endl;
+    cout << "COM Port wrote " << hex << written << " bytes (attempted " << hex << num_bytes << " bytes)" << endl;
     return CPErrorCode::SUCCESS;
 }
 
@@ -293,7 +299,7 @@ CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
     }
 
     if (bytesReceived > 0) {
-        cout << "COM Port read " << bytesReceived  << " bytes" << endl;
+        cout << "COM Port read " << hex << bytesReceived  << " bytes" << endl;
         return CPErrorCode::SUCCESS;
     } else {
         // nothing was received
@@ -373,13 +379,23 @@ bool COMPort::isPortOpen() {
 
 bool COMPort::canWrite() {
     chrono::steady_clock::time_point now = chrono::steady_clock::now();
+    
+    if (now < last_transmission_end) {
+        return false;
+    }
 
     // Calculate elapsed time since the last transmission ended
     auto elapsed_time = chrono::duration_cast<chrono::milliseconds>
         (now - last_transmission_end);
 
     // Check if the elapsed time exceeds or matches the timeout
-    return elapsed_time.count() >= getTimeoutMs();
+    if (elapsed_time.count() >= getTimeoutMs()) {
+        // cout << "CAAAAAAAn WRITE" << endl;
+        return true;
+    } else {
+        // cout << "CANT WRITE" << endl;
+        return false;
+    }
 }
 
 

@@ -66,6 +66,8 @@ int AudioRecorder::replayAudio() {
 		return -1;
 	}
 
+	cout << " replayAudio()" << endl;
+
 	initializePlayback();
 	playBuffer();
 	closePlayback();
@@ -91,10 +93,15 @@ int AudioRecorder::prepareBuffer(int seconds) {
 	recBuf = (AudioBufT*)malloc(recBufSize * sizeof(AudioBufT));
 	
 #elif __linux__
+	long unsigned int bytesPerSample = recBitsPerSample / 8;
+	long unsigned int bytesPerSecond = bytesPerSample * recNumCh * recSamplesPerSencod;
+	long unsigned int bytesToAllocate = bytesPerSecond * seconds;
+	long unsigned int elementsToAllocate = bytesToAllocate / sizeof(char);
+	recBufSize = elementsToAllocate;
 
 	// Nuber of bytes in the buffer used to store the complete playback/capture data
 	//			  5       * 2    	 * 16				/ 8 * 16384				   * 2
-	recBufSize = (seconds * recNumCh * recBitsPerSample / 8 * recSamplesPerSencod) * sizeof(AudioBufT);
+	// recBufSize = (seconds * recNumCh * recBitsPerSample / 8 * recSamplesPerSencod) * sizeof(AudioBufT);
 	recBuf = (AudioBufT*)malloc(recBufSize);
 	cout << "Allocated " << recBufSize << " bytes" << endl;
 #else
@@ -300,10 +307,13 @@ void AudioRecorder::closeRecordring() {
 }
 
 int AudioRecorder::initializePlayback() {
+	cout << "init playback" << endl;
 	int i = prepareStream(&pcm_handle_Playback, stream_Playback, &hwparams_Playback, pcm_name_Playback);
+	cout << "init playback: " << i << endl;
 	return i;
 }
 int AudioRecorder::playBuffer() {
+
 	int BYTES_PER_FRAME = (recNumCh * recBitsPerSample / 8);      		// = 4 for 16 bit stereo
 	int FRAMES_IN_BIG_BUF = recBufSize / BYTES_PER_FRAME;
 	size_t framesW = 0;  
@@ -326,6 +336,8 @@ int AudioRecorder::prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream
 
 	int BYTES_PER_FRAME = (recNumCh * recBitsPerSample / 8);      		// = 4 for 16 bit stereo, = 2 for 16 bit mono
 	int FRAMES_PER_HW_BUF  = (BYTES_PER_HW_BUF / BYTES_PER_FRAME);    	// Number of frames in a completely full hardware buffer
+	
+	cout << "AudioRecorder::prepareStream() buf is @" << (void*)recBuf << " contains " << recBufSize << " bytes" << endl;
 	
 	// Allocate space for the hwparams structure on the stack
 	snd_pcm_hw_params_alloca(hwparams);
@@ -404,8 +416,7 @@ int AudioRecorder::prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream
 long AudioRecorder::readbuf(snd_pcm_t *handle, char *buf, long len, size_t *frames, size_t *max) {
     long r;
 	_snd_pcm_format format = SND_PCM_FORMAT_S16_LE;
-	int channels = 2;
-	int frame_bytes = (snd_pcm_format_width(format) / 8) * channels; 
+	int frame_bytes = (snd_pcm_format_width(format) / 8) * recNumCh; 
     
 	while (len > 0) {
         r = snd_pcm_readi(handle, buf, len);		
@@ -425,9 +436,8 @@ long AudioRecorder::readbuf(snd_pcm_t *handle, char *buf, long len, size_t *fram
 
 long AudioRecorder::writebuf(snd_pcm_t *handle, char *buf, long len, size_t *frames) {
     long r;
-	int channels = 2;
 	_snd_pcm_format format = SND_PCM_FORMAT_S16_LE;
-    int frame_bytes = (snd_pcm_format_width(format) / 8) * channels;
+    int frame_bytes = (snd_pcm_format_width(format) / 8) * recNumCh;
     while (len > 0) {
         r = snd_pcm_writei(handle, buf, len);		
         if (r == -EAGAIN)

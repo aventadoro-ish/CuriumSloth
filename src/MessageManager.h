@@ -17,6 +17,8 @@ class MessageManger {
     // awaiting sending (first in, first out)
     QueueProper<Message> send_queue;
 
+    QueueProper<Message> in_queue;
+
     // awaiting confirmation (retransmit based on timeout)
     QueueProper<Message> pending_confirmation_queue;
 
@@ -45,6 +47,9 @@ public:
     /// @brief Needs to be called in the main loop
     /// @return 0 if all queues are empty, -1 if error, 1 if queues are not empty (no errors)
     int tick();
+
+    /// @brief Temp function that combines incoming queue to play it as a single audio message
+    void replayAudio();
 
     void setCOMPort(COMPort* port) {
         this->port = port;

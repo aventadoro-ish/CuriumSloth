@@ -2,6 +2,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <iostream>
 
+#include "CmS_Sound.h"
 
 using namespace std;
 
@@ -9,6 +10,9 @@ using namespace std;
 MessageManger::MessageManger(int senderID, size_t max_msg_size) {
     this->senderID = senderID;
     max_message_size = max_msg_size;
+
+    send_queue = QueueProper<Message>();
+    in_queue = QueueProper<Message>();
 }
 
 MessageManger::~MessageManger() {
@@ -65,8 +69,6 @@ int MessageManger::transmitData(int receiverID,
 
         // TODO: change queue to menage memory
         send_queue.push(msg);
-        
-        // delete msg;
 
         cout << "encoded message chuck " << i << endl;
     }
@@ -87,7 +89,6 @@ int MessageManger::transmitData(int receiverID,
 
     send_queue.push(msg);
 
-    // delete msg;
     return 0;
 }
 
@@ -101,16 +102,15 @@ int MessageManger::tick() {
         cout << "SENDING MESSAGE:";
         // msg->printHeader();
 
-        char* msg_payload = (char*)msg->getMessage() + sizeof(MSGHeader);
-
-        for (int i = 0; i < msg->getPayloadSize(); i++) {
-            cout << msg_payload[i];
-        }
-        cout << endl;
-
+        // char* msg_payload = (char*)msg->getMessage() + sizeof(MSGHeader);
+        // for (int i = 0; i < msg->getPayloadSize(); i++) {
+        //     cout << msg_payload[i];
+        // }
+        // cout << endl;
+        cout << " size is " << hex << msg->getMessageSize();
         port->sendMessage(msg->getMessage(), msg->getMessageSize());
         
-        free(msg);
+        free(msg); // TODO: bring back
     }
 
     // This method of receiving messages only works for blocking reads
@@ -120,19 +120,61 @@ int MessageManger::tick() {
 
         port->receiveMessage(buf, getBufferSize());
 
-        Message incoming = Message();
-        incoming.addData(buf, getBufferSize(), false);
-        incoming.decodeMessage();
+        Message* incoming = new Message();
+        incoming->addData(buf, getBufferSize(), false);
+        incoming->decodeMessage();
 
-        char* text = (char*)incoming.getMessage();
-        text[incoming.getOriginalSize()] = 0;
-        cout << "RECEIVING MESSAGE [" << incoming.getOriginalSize() << " ]:" << text << endl;
+        in_queue.push(incoming);
+
+        if (incoming->getType() == MSGType::AUDIO) {
+            if (incoming->getSenderID() != 0 ||
+                incoming->getReceiverID() != 1) {
+                    cout << "fault************************" << endl;
+                }
+
+
+        } else if (incoming->getType() == MSGType::TEXT) {
+            char* text = (char*)incoming->getMessage();
+            text[incoming->getOriginalSize()] = 0;
+            cout << "RECEIVING TEXT MESSAGE [" << incoming->getOriginalSize() << " ]:" << text << endl;
+
+        }
+
     }
 
   
     return !send_queue.isEmpty();
 }
 
+
+void MessageManger::replayAudio() {
+    QueueProper<Message> tempQueue = QueueProper<Message>();
+
+
+    size_t total_payload_size = 0;
+    while(!in_queue.isEmpty()) {
+        Message* msg = in_queue.pop();
+        total_payload_size += msg->getMessageSize();
+        tempQueue.push(msg);
+    }
+
+    void* buf = malloc(total_payload_size);
+    
+
+    size_t idx = 0;
+    while (!tempQueue.isEmpty()) {
+        Message* msg = tempQueue.pop();
+
+        memcpy(buf + idx, msg->getMessage(), msg->getMessageSize());
+        in_queue.push(msg);
+    }
+    
+    AudioRecorder arp = AudioRecorder();
+    arp.setBuffer(buf, total_payload_size);
+    arp.replayAudio();
+
+
+}
 
 
 

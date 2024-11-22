@@ -38,7 +38,7 @@ private:
 	snd_pcm_t* pcm_handle_Playback; 									// Handle for a PCM device (playback)
 	snd_pcm_stream_t stream_Playback = SND_PCM_STREAM_PLAYBACK; 		// *** Playback stream ***
 	snd_pcm_hw_params_t* hwparams_Playback;								// Structure used to specify config properties of hardware/stream
-	char* pcm_name_Playback = "default"; // "hw:0:0"; //"hw:0,1"; //"default";		// Name of PCM device (e.g. "hw:0,0" or "default"). First # is number of soundcard, second # is the device. Use $ aplay -L  or $arecord -L to get names of available devices 
+	char* pcm_name_Playback = "hw:0,1"; // "hw:0:0"; //"hw:0,1"; //"default";		// Name of PCM device (e.g. "hw:0,0" or "default"). First # is number of soundcard, second # is the device. Use $ aplay -L  or $arecord -L to get names of available devices 
 	
 	// Capture (Record) vars
 	snd_pcm_t* pcm_handle_Capture; 										// Handle for a PCM device (capture)
@@ -159,8 +159,8 @@ public:
 	/// A way to get the pointer to the recBuf
 	/// </summary>
 	/// <returns>recBuf pointer (may be nullptr)</returns>
-	short* getBuffer() {
-		return (short*)recBuf;
+	void* getBuffer() {
+		return (void*)recBuf;
 	}
 
 	/// <summary>
@@ -173,7 +173,7 @@ public:
 #elif __linux__
 		// interface returns short* buf, but linux uses char* buf
 		// so linux should report bufSize to be 2 times less
-		return recBufSize / sizeof(short);
+		return recBufSize;
 #else
 		return 0;
 #endif
@@ -186,7 +186,7 @@ public:
 	/// </summary>
 	/// <param name="buf">Buffer to be replayed</param>
 	/// <param name="bufSize">Size of the buffer</param>
-	void setBuffer(short* buf, uint32_t bufSize) {
+	void setBuffer(void* buf, uint32_t bufSize) {
 		recBuf = (AudioBufT*)buf;
 		recBufSize = bufSize;
 	}

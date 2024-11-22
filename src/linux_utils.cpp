@@ -1,3 +1,7 @@
+#include <iostream>
+#include <cstring>	
+#include <iomanip>
+
 #ifdef __linux__
 #include "linux_utils.h"
 
@@ -39,3 +43,41 @@ int kbhit(void)
 
 
 #endif
+
+
+
+void printHexDump(void* buf, size_t size) {
+    unsigned char* data = static_cast<unsigned char*>(buf);
+
+    for (size_t i = 0; i < size; i += 16) {
+        // Print the offset in hex
+        // std::cout << std::setw(8) << std::setfill('0') << std::hex << i << ": ";
+        std::cout << std::setw(8) << std::setfill('0') << std::hex << buf << ": ";
+
+        // Print hex bytes
+        for (size_t j = 0; j < 16; ++j) {
+            if (i + j < size) {
+                std::cout << std::setw(2) << static_cast<unsigned>(data[i + j]) << " ";
+            } else {
+                std::cout << "   "; // Fill space for alignment
+            }
+        }
+
+        // Print ASCII characters
+        std::cout << " |";
+        for (size_t j = 0; j < 16; ++j) {
+            if (i + j < size) {
+                char c = data[i + j];
+                if (std::isprint(static_cast<unsigned char>(c))) {
+                    std::cout << c;
+                } else {
+                    std::cout << '.';
+                }
+            }
+        }
+        std::cout << "|" << std::endl;
+    }
+
+    // Reset the formatting
+    std::cout << std::dec;
+}
