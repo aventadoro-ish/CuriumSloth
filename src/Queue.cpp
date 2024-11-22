@@ -1,4 +1,4 @@
-/* QueueTemp.cpp : Queue implementation using templates
+/* Queue.cpp : Queue implementation using templates
  * Date: Oct 2024
  * Author:
  *         

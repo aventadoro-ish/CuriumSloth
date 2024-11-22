@@ -3,13 +3,17 @@
  *
  */
 
-#include <Windows.h>    
+#include <Windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "RS232Comm.h"
+#include "Queue.h"
+#include "message.h"
 
 // Note: Comment out the Tx or Rx sections below to operate in single sided mode
+
+using namespace std;
 
 // Declare constants, variables and communication parameters
 const int BUFSIZE = 140;							// Buffer size
@@ -30,33 +34,85 @@ int nComRate = 460800;								// Baud (Bit) rate in bits/second 9600
 int nComBits = 8;									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimeout struct variable
 
+// Function to populate the queue with random quotes
+template <typename T>
+void populateQueue(Queue<T>& quoteQueue) {
+    // Step 1: Count the quotes and prepare indexing
+    int numQuotes = fnumQuotes();
+    if (numQuotes <= 0) {
+        printf("Error: No quotes found in the file or file missing.\n");
+        return;
+    }
+
+    long int* quoteIndices = fquoteIndices(numQuotes);
+    int* quoteLengths = fquoteLength(numQuotes, quoteIndices);
+
+    if (!quoteIndices || !quoteLengths) {
+        printf("Error: Failed to index the quotes.\n");
+        free(quoteIndices);
+        free(quoteLengths);
+        return;
+    }
+
+    srand((unsigned int)time(NULL)); // Seed random number generator
+
+    // Enqueue random quotes
+    for (int i = 0; i < 10; ++i) { // Add 10 quotes to the queue as an example
+        int randIndex = frandNum(1, numQuotes); // Random index between 1 and numQuotes
+        char buffer[BUFSIZE];
+        int result = GetMessageFromFile(buffer, BUFSIZE, randIndex, numQuotes, quoteIndices, quoteLengths);
+        if (result == 0) {
+            string quote(buffer);
+            Node<T>* newNode = new Node<T>{ nullptr, quote }; // Create a new node
+            quoteQueue.addToQueue(newNode); // Add to the queue
+        }
+    }
+
+    free(quoteIndices); // Clean up memory
+    free(quoteLengths);
+}
+
  // The client - A testing main that calls the functions below
 int rs232test() {
 
-	// Set up both sides of the comm link
-	initPort(&hComRx, COMPORT_Rx, nComRate, nComBits, timeout);	// Initialize the Rx port
-	Sleep(500);
-	initPort(&hComTx, COMPORT_Tx, nComRate, nComBits, timeout);	// Initialize the Tx port
-	Sleep(500);
+	// Initialize the queue
+	Queue<string> quoteQueue; // Create a queue of strings
+	quoteQueue.inItQueue(); 
 
-	// Transmit side 
-	char msgOut[] = "Hey Besart!";							// Sent message	
-	outputToPort(&hComTx, msgOut, strlen(msgOut)+1);			// Send string to port - include space for '\0' termination
-	Sleep(500);													// Allow time for signal propagation on cable 
+	populateQueue(quoteQueue); // Populate the queue with random quotes
 
-	// Receive side  
-	char msgIn[BUFSIZE];
-	DWORD bytesRead;
-	bytesRead = inputFromPort(&hComRx, msgIn, BUFSIZE);			// Receive string from port
-	//printf("Length of received msg = %d", bytesRead);
-	msgIn[bytesRead] = '\0';
-	printf("\nMessage Received: %s\n\n", msgIn);				// Display message from port
-	
-	// Tear down both sides of the comm link
-	purgePort(&hComRx);											// Purge the Rx port
-	purgePort(&hComTx);											// Purge the Tx port
-	CloseHandle(hComRx);										// Close the handle to Rx port 
-	CloseHandle(hComTx);										// Close the handle to Tx port 
-	
-	system("pause");
+
+    // Set up the COM ports
+    initPort(&hComRx, COMPORT_Rx, nComRate, nComBits, timeout);
+    Sleep(500);
+    initPort(&hComTx, COMPORT_Tx, nComRate, nComBits, timeout);
+    Sleep(500);
+
+    // Dequeue a quote for transmission
+    if (quoteQueue.isQueueEmpty()) {
+        printf("No quotes available to send!\n");
+        return -1;
+    }
+    Node<string>* quoteNode = quoteQueue.deQueue(); // Get a random quote
+	string msgOut = quoteNode->Data; // Extract the message
+    delete quoteNode; // Clean up the node
+
+    printf("\nSending Message: %s\n", msgOut.c_str());
+    outputToPort(&hComTx, msgOut.c_str(), msgOut.length() + 1); 
+    Sleep(500);
+
+    // Receive a response (if any)
+    char msgIn[BUFSIZE];
+    DWORD bytesRead = inputFromPort(&hComRx, msgIn, BUFSIZE);
+    msgIn[bytesRead] = '\0';
+    printf("\nMessage Received: %s\n", msgIn);
+
+    // Tear down the COM link
+    purgePort(&hComRx);
+    purgePort(&hComTx);
+    CloseHandle(hComRx);
+    CloseHandle(hComTx);
+
+    system("pause");
+    return 0;
 }
