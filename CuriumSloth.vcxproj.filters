@@ -9,9 +9,32 @@
     <ClCompile Include="src\COMPort.cpp" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <ClInclude Include="src\CmS_Sound.h" />
     <ClInclude Include="src\Queue.h" />
     <ClInclude Include="src\terminal.h" />
     <ClInclude Include="src\COMPort.h" />
+=======
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sound.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CmS_Sound.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CmS_Sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+>>>>>>> main
   </ItemGroup>
 </Project>
