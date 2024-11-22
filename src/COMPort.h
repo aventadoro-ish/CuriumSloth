@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <chrono>
 
 #ifdef _WIN32
 // TODO: !!! put Windows-specific stuff here !!! 
@@ -14,9 +15,9 @@
 #endif
 
 enum class  CPParity {
-    EVEN,
-    ODD,
-    NONE
+    EVEN = 1,
+    ODD = -1,
+    NONE = 0
 };
 
 enum class COMPortBaud {
@@ -49,6 +50,9 @@ class COMPort {
     int stop_bits = 1;
     bool is_port_open = false;
 
+    std::chrono::steady_clock::time_point last_transmission_end;
+
+
 #ifdef _WIN32
     // TODO: !!! put Windows-specific member variables here !!! 
 #elif __linux__
@@ -74,6 +78,7 @@ class COMPort {
     CPErrorCode writeToPort(void* buf, unsigned int num_bytes);
     
     CPErrorCode readFromPort(void* buf, size_t bufSize);
+
 
 #endif
 
@@ -109,8 +114,13 @@ public:
 
     CPErrorCode closePort();
 
+
+    /// @brief DOES NOT WORK ATM TODO: fix
+    /// @return 
     CPErrorCode setNonBlockingMode();
 
+    /// @brief DOES NOT WORK ATM TODO: fix
+    /// @return 
     CPErrorCode setBlockingMode();
 
     unsigned int numInputBytes();
@@ -118,4 +128,14 @@ public:
     unsigned int numOutputButes();
 
     bool isPortOpen();
+
+    /// @brief Ensures a timeout delay between sendMessage() calls
+    /// @return true if timeout has passed since last call, false otherwise
+    bool canWrite();
+
+
+    /// @brief Returns the timout time in ms based on TIMEOUT_IN_BYTES 
+    /// and baud rate
+    /// @return number of ms
+    unsigned int getTimeoutMs();
 };

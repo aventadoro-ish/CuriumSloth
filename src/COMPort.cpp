@@ -6,7 +6,7 @@
 // defines timeout in terms of a number of bytes at a certain baud
 // if the time passes equivalent to the transmission of this number of bytes
 // this is considered a timeout
-#define TIMEOUT_IN_BYTES 3000
+#define TIMEOUT_IN_BYTES 100
 
 using namespace std;
 
@@ -40,6 +40,7 @@ using namespace std;
 #include <errno.h>		// Error number definitions
 #include <termios.h>	// POSIX terminal control definitions
 #include <sys/ioctl.h>
+#include <cmath>
 #endif
 
 /*****************************************************************************
@@ -138,6 +139,11 @@ CPErrorCode COMPort::closePort() {
 #endif
 
     return CPErrorCode::SUCCESS;
+}
+
+unsigned int COMPort::getTimeoutMs() {
+    float timeout = 8 * TIMEOUT_IN_BYTES / (unsigned int)baud * 1000;
+    return ceil(timeout);
 }
 
 
@@ -244,6 +250,16 @@ CPErrorCode COMPort::configPort() {
 
 
 CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
+    // estimate the transmission time
+    // 8 bits + parity if enabled + start bit + stop bits
+    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
+    double transmission_time = num_bits_per_byte / (int)baud * num_bytes;
+
+    last_transmission_end = chrono::steady_clock::now() +
+                            chrono::duration_cast<chrono::steady_clock::duration>(
+                                    chrono::duration<double>(transmission_time));
+
+
     int written = write(fd, buf, num_bytes);
 	if (written < 0) {
 		cerr << "write() of bytes failed!\n" << endl;
@@ -283,20 +299,6 @@ CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
         // nothing was received
         return CPErrorCode::READ_FAILED;
     }
-
-
-
-    // int recBytes = read(fd, buf, bufSize);
-    // if (recBytes < 0) {
-    //     cerr << "Failed to read message from comPort" << endl;
-    //     return CPErrorCode::READ_FAILED;
-    // }
-    // cout << "COM Port read " << recBytes  << " bytes" << endl;
-    // if (recBytes == 0) {
-    //     cerr << "Warning! Reading EOF" << endl;
-    //     return CPErrorCode::READ_FAILED;
-    // }
-    // return CPErrorCode::SUCCESS;
 
 }
 
@@ -351,7 +353,6 @@ unsigned int COMPort::numOutputButes() {
         return 0;
     }
 
-
     return 0;
 }
 
@@ -369,6 +370,17 @@ bool COMPort::isPortOpen() {
     
 }
 
+
+bool COMPort::canWrite() {
+    chrono::steady_clock::time_point now = chrono::steady_clock::now();
+
+    // Calculate elapsed time since the last transmission ended
+    auto elapsed_time = chrono::duration_cast<chrono::milliseconds>
+        (now - last_transmission_end);
+
+    // Check if the elapsed time exceeds or matches the timeout
+    return elapsed_time.count() >= getTimeoutMs();
+}
 
 
 

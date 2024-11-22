@@ -96,6 +96,7 @@ void sendSide() {
     while(port.openPort("/dev/ttyUSB0") != CPErrorCode::SUCCESS) {
         ;
     }
+    cout << "Port timeout ms is " << port.getTimeoutMs() << endl;
 
     MessageManger mngr = MessageManger(0, 5);
     mngr.setCOMPort(&port);
@@ -108,7 +109,7 @@ void sendSide() {
 
 
     while (mngr.tick()) {
-        sleep(3);
+        // sleep(3);
         // for (unsigned int i = 0; i != 0xfffff; i++) {
         //     ; // wait
         // }

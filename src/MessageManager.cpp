@@ -94,9 +94,8 @@ int MessageManger::transmitData(int receiverID,
 
 int MessageManger::tick() {
     // if there is stuff to send and ouput buffer is empty
-    if (!send_queue.isEmpty() && port->numOutputButes() == 0) {
-        //  && port->numOutputButes() == 00
-        
+    // if (!send_queue.isEmpty() && port->numOutputButes() == 0) {
+    if (!send_queue.isEmpty() && port->canWrite()) {
         Message* msg = send_queue.pop();
 
         cout << "SENDING MESSAGE:";
@@ -114,7 +113,7 @@ int MessageManger::tick() {
         free(msg);
     }
 
-    // This method of 0receiving messages only works for blocking reads
+    // This method of receiving messages only works for blocking reads
     if (port->numInputBytes() > 0) {
         // >= getBufferSize()
         void* buf = (void*)malloc(getBufferSize());
