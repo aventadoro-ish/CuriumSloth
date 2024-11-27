@@ -70,6 +70,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Users\gobind\source\repos\CuriumSloth\src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -131,7 +134,10 @@
     <ClCompile Include="src\CmS_Sound.cpp" />
     <ClCompile Include="src\COMPort.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\QueueTemp.cpp" />
+    <ClCompile Include="src\message.cpp" />
+    <ClCompile Include="src\Queue.cpp" />
+    <ClCompile Include="src\RS232Comm.cpp" />
+    <ClCompile Include="src\RS232test.cpp" />
     <ClCompile Include="src\soundTest.cpp" />
     <ClCompile Include="src\terminal.cpp" />
   </ItemGroup>
@@ -139,7 +145,9 @@
 <<<<<<< HEAD
     <ClInclude Include="src\CmS_Sound.h" />
     <ClInclude Include="src\COMPort.h" />
+    <ClInclude Include="src\message.h" />
     <ClInclude Include="src\Queue.h" />
+    <ClInclude Include="src\RS232Comm.h" />
     <ClInclude Include="src\terminal.h" />
 =======
     <ClInclude Include="CmS_Sound.h" />
