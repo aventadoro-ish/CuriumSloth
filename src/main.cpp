@@ -13,7 +13,6 @@
 #include "CmS_Sound.h"
 #include "COMPort.h"
 #include "Queue.h"
-#include "RS232Comm.h"
 
 using namespace std;
 

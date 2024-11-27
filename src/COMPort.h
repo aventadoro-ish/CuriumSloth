@@ -115,3 +115,7 @@ public:
     CPErrorCode closePort();
 
 };
+
+// Function Prototypes
+
+int rs232test(); // Test Function for RS232 communication
