@@ -127,10 +127,19 @@ public:
     /// @return 
     CPErrorCode setBlockingMode();
 
+    /// @brief returns the number of bytes in the hardware input buffer that 
+    /// are pending to be read
+    /// @return number of bytes
     unsigned int numInputBytes();
 
+    /// @brief returns the number of bytes in the hardware output buffer that
+    /// are pending to be sent
+    /// @return number of bytes
     unsigned int numOutputButes();
 
+    /// @brief checks if the port port_name is a valid port, and it is
+    /// currently open
+    /// @return true if port is open
     bool isPortOpen();
 
     /// @brief Ensures a timeout delay between sendMessage() calls
