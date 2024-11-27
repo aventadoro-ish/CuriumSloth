@@ -12,12 +12,18 @@
 #include "terminal.h"
 #include "CmS_Sound.h"
 #include "COMPort.h"
+#include "RS232test.cpp"
 #include "Queue.h"
-#include "RS232Comm.h"
 #include "Message.h"
 #include "MessageManager.h"
 
 #include "linux_utils.h"
+
+#ifdef _WIN32
+
+#include <conio.h>
+
+#endif
 
 using namespace std;
 
@@ -95,6 +101,17 @@ void recSide() {
 }
 
 void sendSide() {
+
+
+
+
+
+
+
+
+
+
+
 
     // Discards the input buffer
     fflush(stdin);

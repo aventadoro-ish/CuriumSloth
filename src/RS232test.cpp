@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "RS232Comm.h"
 #include "Queue.h"
-#include "message.h"
+#include "FortuneCookies.h"
+#include <ctime>
 
 // Note: Comment out the Tx or Rx sections below to operate in single sided mode
 

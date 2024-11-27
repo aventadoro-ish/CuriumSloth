@@ -1,7 +1,8 @@
 #include "COMPort.h"
 #include <iostream>
 #include <cstring>
-#include "linux_utils.h"
+#include <cmath>
+
 
 
 // defines timeout in terms of a number of bytes at a certain baud
@@ -41,7 +42,8 @@ using namespace std;
 #include <errno.h>		// Error number definitions
 #include <termios.h>	// POSIX terminal control definitions
 #include <sys/ioctl.h>
-#include <cmath>
+
+#include "linux_utils.h"
 #endif
 
 /*****************************************************************************

@@ -165,7 +165,7 @@ void MessageManger::replayAudio() {
     while (!tempQueue.isEmpty()) {
         Message* msg = tempQueue.pop();
 
-        memcpy(buf + idx, msg->getMessage(), msg->getMessageSize());
+        memcpy((void*)((size_t)buf + idx), msg->getMessage(), msg->getMessageSize());
         in_queue.push(msg);
     }
     
