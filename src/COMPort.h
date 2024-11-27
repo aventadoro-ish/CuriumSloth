@@ -153,7 +153,3 @@ public:
     unsigned int getTimeoutMs();
 
 };
-
-// Function Prototypes
-
-int rs232test(); // Test Function for RS232 communication
