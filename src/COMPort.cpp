@@ -79,11 +79,55 @@ CPErrorCode COMPort::openPort(char* port_name) {
     if (this->port_name != nullptr) {
         free(this->port_name);
     }
-    this->port_name = (char*)malloc(strlen(port_name) * sizeof(char));
+    this->port_name = (char*)malloc(strlen(port_name) * sizeof(char) + 1);
     strcpy(this->port_name, port_name);
 
 
-    // TODO: !!! put code to open port here !!!
+    hCom = CreateFileA(
+        port_name,
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        nullptr,
+        OPEN_EXISTING,
+        0,
+        nullptr
+    );
+
+    if (hCom == INVALID_HANDLE_VALUE) {
+        cerr << "Error opening port: " << GetLastError() << endl;
+        return CPErrorCode::PARAMETER_ERROR;
+    }
+
+    DCB dcb = { 0 };
+    dcb.DCBlength = sizeof(DCB);
+
+    if (!GetCommState(hCom, &dcb)) {
+        cerr << "Error getting COM state: " << GetLastError() << endl;
+        return CPErrorCode::PARAMETER_ERROR;
+    }
+
+    dcb.BaudRate = (DWORD)baud;
+    dcb.ByteSize = 8; // Assuming 8 bits
+    dcb.Parity = (parity == CPParity::EVEN) ? EVENPARITY :
+        (parity == CPParity::ODD) ? ODDPARITY : NOPARITY;
+    dcb.StopBits = (stop_bits == 2) ? TWOSTOPBITS : ONESTOPBIT;
+
+    if (!SetCommState(hCom, &dcb)) {
+        cerr << "Error setting COM state: " << GetLastError() << endl;
+        return CPErrorCode::PARAMETER_ERROR;
+    }
+
+    // Setup timeouts
+    timeouts.ReadIntervalTimeout = 50;
+    timeouts.ReadTotalTimeoutMultiplier = 10;
+    timeouts.ReadTotalTimeoutConstant = 50;
+    timeouts.WriteTotalTimeoutMultiplier = 10;
+    timeouts.WriteTotalTimeoutConstant = 50;
+
+    if (!SetCommTimeouts(hCom, &timeouts)) {
+        cerr << "Error setting timeouts: " << GetLastError() << endl;
+        return CPErrorCode::PARAMETER_ERROR;
+    }
 
 
 #if defined(__linux__)
@@ -113,8 +157,15 @@ CPErrorCode COMPort::sendMessage(void* buf, unsigned int num_bytes) {
 
     // printHexDump(buf, num_bytes);
 
-    writeToPort(buf, num_bytes);
 
+#ifdef _WIN32
+    DWORD bytesWritten = 0;
+    if (!WriteFile(hCom, buf, num_bytes, &bytesWritten, nullptr)) {
+        cerr << "Error writing to COM port: " << GetLastError() << endl;
+        return CPErrorCode::WRITE_FAILED;
+    }
+#endif
+    
     return CPErrorCode::SUCCESS;
 }
 
@@ -127,7 +178,13 @@ CPErrorCode COMPort::receiveMessage(void* buf,
         return CPErrorCode::PORT_IS_CLOSED;
     }
 
-    readFromPort(buf, bufSize);
+#ifdef _WIN32
+    DWORD bytesRead = 0;
+    if (!ReadFile(hCom, buf, bufSize, &bytesRead, nullptr)) {
+        cerr << "Error reading from COM port: " << GetLastError() << endl;
+        return CPErrorCode::READ_FAILED;
+    }
+#endif
 
     return CPErrorCode::SUCCESS;
 }
@@ -138,11 +195,16 @@ CPErrorCode COMPort::closePort() {
     }
 
     // TODO: !!! put code to close port !!!
+    if (!CloseHandle(hCom)) {
+        cerr << "Error closing COM port: " << GetLastError() << endl;
+        return CPErrorCode::PARAMETER_ERROR;
+    }
 
 #ifdef __linux__ 
     close(fd);
 #endif
 
+    is_port_open = false; 
     return CPErrorCode::SUCCESS;
 }
 
@@ -168,6 +230,40 @@ CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
 CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
     return CPErrorCode::READ_FAILED;
 }
+
+CPErrorCode COMPort::setNonBlockingMode() {
+    cerr << "NOT IMPLEMENTED" << endl;
+    return CPErrorCode::PARAMETER_ERROR;
+}
+
+CPErrorCode COMPort::setBlockingMode() {
+    cerr << "NOT IMPLEMENTED" << endl;
+    return CPErrorCode::PARAMETER_ERROR;
+}
+
+unsigned int COMPort::numInputBytes() {
+    cerr << "NOT IMPLEMENTED" << endl;
+    return 0;
+}
+
+unsigned int COMPort::numOutputButes() {
+    cerr << "NOT IMPLEMENTED" << endl;
+    return 0;
+}
+
+bool COMPort::isPortOpen() {
+    cerr << "NOT IMPLEMENTED" << endl;
+    return false;
+}
+
+bool COMPort::canWrite() {
+    cerr << "NOT IMPLEMENTED" << endl;
+    return false;
+}
+
+
+
+unsigned int getTimeoutMs();
 
 
 #elif __linux__

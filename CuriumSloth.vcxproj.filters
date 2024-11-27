@@ -7,17 +7,14 @@
     <ClCompile Include="src\soundTest.cpp" />
     <ClCompile Include="src\terminal.cpp" />
     <ClCompile Include="src\COMPort.cpp" />
-    <ClCompile Include="src\RS232Comm.cpp" />
     <ClCompile Include="src\RS232test.cpp" />
     <ClCompile Include="src\message.cpp" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <ClInclude Include="src\CmS_Sound.h" />
     <ClInclude Include="src\Queue.h" />
     <ClInclude Include="src\terminal.h" />
     <ClInclude Include="src\COMPort.h" />
-    <ClInclude Include="src\RS232Comm.h" />
-    <ClInclude Include="src\message.h" />
+    <ClInclude Include="src\FortuneCookies.h" />
   </ItemGroup>
 </Project>

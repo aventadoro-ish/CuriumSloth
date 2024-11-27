@@ -12,7 +12,7 @@
 #include "terminal.h"
 #include "CmS_Sound.h"
 #include "COMPort.h"
-#include "RS232test.cpp"
+#include "RS232test.h"
 #include "Queue.h"
 #include "Message.h"
 #include "MessageManager.h"
