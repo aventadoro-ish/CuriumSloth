@@ -242,25 +242,59 @@ CPErrorCode COMPort::setBlockingMode() {
 }
 
 unsigned int COMPort::numInputBytes() {
-    cerr << "NOT IMPLEMENTED" << endl;
-    return 0;
+    if (!isPortOpen()) {
+        cerr << "Error: Port is not open." << endl;
+        return 0;
+    }
+
+    // Check the COM port for input bytes
+    COMSTAT comStat;
+    DWORD errors;
+    if (!ClearCommError(hCom, &errors, &comStat)) {
+        cerr << "Error getting input buffer size: " << GetLastError() << endl;
+        return 0;
+    }
+    return comStat.cbInQue; // Number of bytes in the input buffer
 }
 
 unsigned int COMPort::numOutputButes() {
-    cerr << "NOT IMPLEMENTED" << endl;
-    return 0;
+    if (!isPortOpen()) {
+        cerr << "Error: Port is not open." << endl;
+        return 0;
+    }
+
+    // Check the COM port for output bytes
+    COMSTAT comStat;
+    DWORD errors;
+    if (!ClearCommError(hCom, &errors, &comStat)) {
+        cerr << "Error getting output buffer size: " << GetLastError() << endl;
+        return 0;
+    }
+    return comStat.cbOutQue; // Number of bytes in the output buffer
 }
 
 bool COMPort::isPortOpen() {
-    cerr << "NOT IMPLEMENTED" << endl;
-    return false;
+	return (hCom != INVALID_HANDLE_VALUE) && is_port_open; // Check if the port is open
 }
 
 bool COMPort::canWrite() {
-    cerr << "NOT IMPLEMENTED" << endl;
-    return false;
-}
+    auto now = std::chrono::steady_clock::now();
 
+    if (now < last_transmission_end) {
+        return false; // Still waiting for timeout to pass
+    }
+
+    // Calculate the elapsed time since the last transmission ended
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_transmission_end);
+
+    // Check if the elapsed time exceeds or matches the timeout
+    if (elapsedTime.count() >= getTimeoutMs()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
 
 unsigned int getTimeoutMs();

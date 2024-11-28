@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="src\CmS_Sound.cpp" />
     <ClCompile Include="src\COMPort.cpp" />
+    <ClCompile Include="src\COMPortTest.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\FortuneCookies.cpp" />
     <ClCompile Include="src\Queue.cpp" />
@@ -141,17 +142,12 @@
     <ClCompile Include="src\terminal.cpp" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <ClInclude Include="src\CmS_Sound.h" />
     <ClInclude Include="src\COMPort.h" />
+    <ClInclude Include="src\COMPortTest.h" />
     <ClInclude Include="src\FortuneCookies.h" />
     <ClInclude Include="src\Queue.h" />
     <ClInclude Include="src\terminal.h" />
-=======
-    <ClInclude Include="CmS_Sound.h" />
-    <ClInclude Include="src\Queue.h" />
-    <ClInclude Include="src\sound.h" />
->>>>>>> main
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
