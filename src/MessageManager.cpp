@@ -95,7 +95,7 @@ int MessageManger::transmitData(int receiverID,
 
 int MessageManger::tick() {
     // if there is stuff to send and ouput buffer is empty
-    // if (!send_queue.isEmpty() && port->numOutputButes() == 0) {
+    // if (!send_queue.isEmpty() && port->numOutputBytes() == 0) {
     if (!send_queue.isEmpty() && port->canWrite()) {
         Message* msg = send_queue.pop();
 

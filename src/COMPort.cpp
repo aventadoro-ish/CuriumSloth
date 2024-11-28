@@ -60,7 +60,7 @@ COMPort::COMPort(COMPortBaud baud, CPParity parity, int stop_bits) {
 }
 
 COMPort::~COMPort() {
-    if (is_port_open) {
+    if (isPortOpen()) {
         closePort();
     }
 
@@ -70,7 +70,7 @@ COMPort::~COMPort() {
 }
 
 CPErrorCode COMPort::openPort(char* port_name) {
-    if (is_port_open) {
+    if (isPortOpen()) {
         cerr << "Unable to open " << port_name 
              << ". Port is already open for " << this->port_name << endl;
         return CPErrorCode::PORT_IS_OPEN;
@@ -82,7 +82,97 @@ CPErrorCode COMPort::openPort(char* port_name) {
     this->port_name = (char*)malloc(strlen(port_name) * sizeof(char) + 1);
     strcpy(this->port_name, port_name);
 
+    
+    return openPortPlatform();;
+}
 
+CPErrorCode COMPort::sendMessage(void* buf, unsigned int num_bytes) {
+    if (!isPortOpen()) {
+        return CPErrorCode::PORT_IS_CLOSED;
+    }
+
+    // estimate the transmission time
+    // 8 bits + parity if enabled + start bit + stop bits
+    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
+    double transmission_time = num_bits_per_byte * num_bytes * 3.0 / (int)baud ;
+    transmission_time += getTimeoutMs() / 1000.0;
+    last_transmission_end = chrono::steady_clock::now() +
+                            chrono::duration_cast<chrono::steady_clock::duration>(
+                                    chrono::duration<double>(transmission_time));
+    cout << "Transmission time = " << transmission_time << endl;
+
+
+    return writeToPort(buf, num_bytes);;
+}
+
+CPErrorCode COMPort::receiveMessage(void* buf,
+                                          size_t bufSize,
+                                          size_t maxMessage) {
+    
+    if (!isPortOpen()) {
+        return CPErrorCode::PORT_IS_CLOSED;
+    }
+    
+    return readFromPort(buf, bufSize);
+}
+
+CPErrorCode COMPort::closePort() {
+    if (!isPortOpen()) {
+        return CPErrorCode::PORT_IS_CLOSED;
+    }
+
+    // TODO: !!! put code to close port !!!
+    if (!CloseHandle(hCom)) {
+        cerr << "Error closing COM port: " << GetLastError() << endl;
+        return CPErrorCode::PARAMETER_ERROR;
+    }
+
+#ifdef __linux__ 
+    close(fd);
+#endif
+
+    return CPErrorCode::SUCCESS;
+}
+
+unsigned int COMPort::getTimeoutMs() {
+    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
+    double timeout = num_bits_per_byte * TIMEOUT_IN_BYTES * 1000 / (unsigned int)baud;
+    return ceil(timeout);
+}
+
+
+#ifdef _WIN32
+/*****************************************************************************
+ * 							WINDOWS IMPLEMENTATION							 *
+ *****************************************************************************/
+
+CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
+    DWORD bytesWritten = 0;
+    if (!WriteFile(hCom, buf, num_bytes, &bytesWritten, nullptr)) {
+        cerr << "Error writing to COM port: " << GetLastError() << endl;
+        return CPErrorCode::WRITE_FAILED;
+    }
+    
+    if (bytesWritten != num_bytes) {
+        cerr << "WARNING! written bytes " << bytesWritten 
+        << " != requested to write " << num_bytes << endl;
+    }
+    
+    return CPErrorCode::SUCCESS;
+}
+
+CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
+    DWORD bytesRead = 0;
+    if (!ReadFile(hCom, buf, bufSize, &bytesRead, nullptr)) {
+        cerr << "Error reading from COM port: " << GetLastError() << endl;
+        return CPErrorCode::READ_FAILED;
+    }
+
+    return CPErrorCode::SUCCESS;
+}
+
+CPErrorCode COMPort::openPortPlatform() {
+    
     hCom = CreateFileA(
         port_name,
         GENERIC_READ | GENERIC_WRITE,
@@ -129,106 +219,7 @@ CPErrorCode COMPort::openPort(char* port_name) {
         return CPErrorCode::PARAMETER_ERROR;
     }
 
-
-#if defined(__linux__)
-    fd = open(port_name, O_RDWR | O_NOCTTY); // | O_NDELAY);	// Open for reading and writing, not as controlling terminal, no delay (no sleep - keep awake) (see Source 1)
-	if (fd == -1) {
-		perror("\nError: could not open specified port\n"); 
-        return CPErrorCode::PARAMETER_ERROR;
-	}
-
-    fcntl(fd, F_SETFL, 0);						// Manipulates the file descriptor ands sets status FLAGS to 0 (see Source 4)
-                                                // Block (wait) until characters come in or interval timer expires
-
-    configPort();
-    tcflush(fd, TCIFLUSH);
-#endif
-
-
-    
-    is_port_open = true;
     return CPErrorCode::SUCCESS;
-}
-
-CPErrorCode COMPort::sendMessage(void* buf, unsigned int num_bytes) {
-    if (!is_port_open) {
-        return CPErrorCode::PORT_IS_CLOSED;
-    }
-
-    // printHexDump(buf, num_bytes);
-
-
-#ifdef _WIN32
-    DWORD bytesWritten = 0;
-    if (!WriteFile(hCom, buf, num_bytes, &bytesWritten, nullptr)) {
-        cerr << "Error writing to COM port: " << GetLastError() << endl;
-        return CPErrorCode::WRITE_FAILED;
-    }
-#endif
-    
-    return CPErrorCode::SUCCESS;
-}
-
-CPErrorCode COMPort::receiveMessage(void* buf,
-                                          size_t bufSize,
-                                          size_t maxMessage,
-                                          long int timeout_ms) {
-    
-    if (!is_port_open) {
-        return CPErrorCode::PORT_IS_CLOSED;
-    }
-
-#ifdef _WIN32
-    DWORD bytesRead = 0;
-    if (!ReadFile(hCom, buf, bufSize, &bytesRead, nullptr)) {
-        cerr << "Error reading from COM port: " << GetLastError() << endl;
-        return CPErrorCode::READ_FAILED;
-    }
-#endif
-
-    return CPErrorCode::SUCCESS;
-}
-
-CPErrorCode COMPort::closePort() {
-    if (!is_port_open) {
-        return CPErrorCode::PORT_IS_CLOSED;
-    }
-
-    // TODO: !!! put code to close port !!!
-    if (!CloseHandle(hCom)) {
-        cerr << "Error closing COM port: " << GetLastError() << endl;
-        return CPErrorCode::PARAMETER_ERROR;
-    }
-
-#ifdef __linux__ 
-    close(fd);
-#endif
-
-    is_port_open = false; 
-    return CPErrorCode::SUCCESS;
-}
-
-unsigned int COMPort::getTimeoutMs() {
-    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
-    double timeout = num_bits_per_byte * TIMEOUT_IN_BYTES * 1000 / (unsigned int)baud;
-    return ceil(timeout);
-}
-
-
-#ifdef _WIN32
-/*****************************************************************************
- * 							WINDOWS IMPLEMENTATION							 *
- *****************************************************************************/
-
-// TODO: !!! put Windows-specific implementation here !!! 
-
-CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
-    return CPErrorCode::WRITE_FAILED;
-
-}
-
-CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
-    return CPErrorCode::READ_FAILED;
 }
 
 CPErrorCode COMPort::setNonBlockingMode() {
@@ -246,7 +237,7 @@ unsigned int COMPort::numInputBytes() {
     return 0;
 }
 
-unsigned int COMPort::numOutputButes() {
+unsigned int COMPort::numOutputBytes() {
     cerr << "NOT IMPLEMENTED" << endl;
     return 0;
 }
@@ -270,6 +261,22 @@ unsigned int getTimeoutMs();
 /*****************************************************************************
  * 							LINUX IMPLEMENTATION							 *
  *****************************************************************************/
+CPErrorCode COMPort::openPortPlatform() {
+    fd = open(port_name, O_RDWR | O_NOCTTY); // | O_NDELAY);	// Open for reading and writing, not as controlling terminal, no delay (no sleep - keep awake) (see Source 1)
+	if (fd == -1) {
+		perror("\nError: could not open specified port\n"); 
+        return CPErrorCode::PARAMETER_ERROR;
+	}
+
+    fcntl(fd, F_SETFL, 0);						// Manipulates the file descriptor ands sets status FLAGS to 0 (see Source 4)
+                                                // Block (wait) until characters come in or interval timer expires
+
+    CPErrorCode err = configPort();
+    tcflush(fd, TCIFLUSH);
+    return err;
+}
+
+
 void COMPort::setParity(termios* options) {
     switch (parity) {
     case CPParity::EVEN:
@@ -353,17 +360,6 @@ CPErrorCode COMPort::configPort() {
 
 
 CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
-    // estimate the transmission time
-    // 8 bits + parity if enabled + start bit + stop bits
-    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
-    double transmission_time = num_bits_per_byte * num_bytes * 3.0 / (int)baud ;
-    transmission_time += getTimeoutMs() / 1000.0;
-    last_transmission_end = chrono::steady_clock::now() +
-                            chrono::duration_cast<chrono::steady_clock::duration>(
-                                    chrono::duration<double>(transmission_time));
-    cout << "Transmission time = " << transmission_time << endl;
-
-
     int written = write(fd, buf, num_bytes);
 	if (written < 0) {
 		cerr << "write() of bytes failed!\n" << endl;
@@ -447,7 +443,7 @@ unsigned int COMPort::numInputBytes() {
 
 }
 
-unsigned int COMPort::numOutputButes() {
+unsigned int COMPort::numOutputBytes() {
     int bytes_in_output_queue = 0;
     ioctl(fd, TIOCOUTQ, &bytes_in_output_queue);
 

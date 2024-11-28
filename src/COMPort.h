@@ -50,7 +50,6 @@ class COMPort {
     COMPortBaud baud = COMPortBaud::COM_BAUD_9600;
     CPParity parity = CPParity::NONE;
     int stop_bits = 1;
-    bool is_port_open = false;
 
     std::chrono::steady_clock::time_point last_transmission_end;
 
@@ -68,10 +67,11 @@ class COMPort {
 
 
 #ifdef _WIN32
-    // TODO: !!! put Windows-specific method declarations here !!! 
     CPErrorCode writeToPort(void* buf, unsigned int num_bytes);
     
     CPErrorCode readFromPort(void* buf, size_t bufSize);
+
+    CPErrorCode openPortPlatform();
 
 #elif __linux__
     CPErrorCode configPort();
@@ -82,6 +82,7 @@ class COMPort {
     CPErrorCode writeToPort(void* buf, unsigned int num_bytes);
     
     CPErrorCode readFromPort(void* buf, size_t bufSize);
+    CPErrorCode openPortPlatform();
 
 
 #endif
@@ -107,13 +108,11 @@ public:
     /// @param buf pointer to the buffer for the message
     /// @param bufSize buffer size in bytes
     /// @param maxMessage stop receiving after maxMessage number of bytes are received. Set to 0 to default to bufSize
-    /// @param timeout_ms stop receiving after this amount of time (ms). Set to 0 to disable
     /// @return 0 if success
     CPErrorCode receiveMessage(
         void* buf, 
         std::size_t bufSize,
-        std::size_t maxMessage = 0,
-        long int timeout_ms = 0);
+        std::size_t maxMessage = 0);
 
 
     CPErrorCode closePort();
@@ -135,7 +134,7 @@ public:
     /// @brief returns the number of bytes in the hardware output buffer that
     /// are pending to be sent
     /// @return number of bytes
-    unsigned int numOutputButes();
+    unsigned int numOutputBytes();
 
     /// @brief checks if the port port_name is a valid port, and it is
     /// currently open
