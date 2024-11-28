@@ -12,6 +12,7 @@
 #include "terminal.h"
 #include "CmS_Sound.h"
 #include "COMPort.h"
+#include "COMPortTest.h"
 #include "RS232test.h"
 #include "Queue.h"
 #include "Message.h"
@@ -44,164 +45,9 @@ void adjustBitrate();
 void setCOMport();
 void setSampleRate();
 void rs232message();
-
-// Global message queue definition
-queue<string> messageQueue;
-size_t maxMsgSize = 1000;
-
-void recSide() {
-
-    // Discards the input buffer
-    fflush(stdin);
-
-    // COMPort port = COMPort();
-    COMPort port = COMPort(COMPortBaud::COM_BAUD_57600, CPParity::NONE, 1);
-
-    while(port.openPort("/dev/ttyUSB1") != CPErrorCode::SUCCESS) {
-        ;
-    }
-    
-
-    
-    MessageManger mngr = MessageManger(1, maxMsgSize);
-    mngr.setCOMPort(&port);
-
-    // while (mngr.tick()) {
-    while (true) {
-        mngr.tick();
-
-        if (kbhit()) {
-            cout << "exiting receive mode" << endl;
-            break;
-        }
-    }
-
-    mngr.replayAudio();
-
-
-
-
-    // size_t buf_size = 500;
-    // void* buf = (void*)malloc(buf_size);
-    // for (;;) {
-    //     if (port.receiveMessage(buf, buf_size) == CPErrorCode::SUCCESS) {
-    //         Message msg = Message();
-    //         msg.addData(buf, buf_size, false);
-    //         msg.decodeMessage();
-    //         // cout << (char*)msg.getMessage() << endl;
-    //     } else {
-    //         cout << "Port read error" << endl;
-    //     }
-    //     if (kbhit()) {
-    //         cout << "Closing program" << endl;
-    //         return;
-    //     }
-    // }
-
-}
-
-void sendSide() {
-
-
-
-
-
-
-
-
-
-
-
-
-    // Discards the input buffer
-    fflush(stdin);
-
-    char* test1 = "Heeeeeeeello there my deeeeeeeeeearrrr friend!";
-
-    COMPort port = COMPort(COMPortBaud::COM_BAUD_57600, CPParity::NONE, 1);
-    while(port.openPort("/dev/ttyUSB0") != CPErrorCode::SUCCESS) {
-        ;
-    }
-    cout << "Port timeout ms is " << port.getTimeoutMs() << endl;
-
-    MessageManger mngr = MessageManger(0, maxMsgSize);
-    mngr.setCOMPort(&port);
-
-    cout << "Recording audio..." << endl;
-    AudioRecorder arr = AudioRecorder();
-    arr.recordAudio(5);
-    cout << "recorded " << arr.getBufferSize() << " bytes @" << arr.getBuffer() << endl;
-    cout << "Confirm audio..." << endl;
-    arr.replayAudio();
-
-    mngr.transmitData(1, MSGType::AUDIO, arr.getBuffer(), arr.getBufferSize());
-
-
-    cout << endl << endl << endl;
-
-
-    while (mngr.tick()) {
-        // sleep(3);
-        // for (unsigned int i = 0; i != 0xfffff; i++) {
-        //     ; // wait
-        // }
-    }
-
-    cout << "Sending ended with no isuuse" << endl;
-}
-
+void comPortTest();
 
 int main() {
-    // soundTest();
-
-    int cmd;
-    cin >> cmd;
-    if (cmd == 0) {
-        getchar();
-
-        recSide();
-    } else if (cmd == 1) {
-        getchar();
-
-        sendSide();
-    } else {
-        return 0;
-    }
-
-
-
-    return 0;
-
-    char* test1 = "Heeeeeeeello there my deeeeeeeearrrr friend!";
-
-
-
-    Message origin = Message();
-    Message dst = Message();
-    char* key = "encryption key!";
-
-    // add raw payload data in encode mode (true - default)
-    origin.addData(test1, strlen(test1) + 1); // + 1 accounts for the null-termination
-    origin.describeData(0, 1, 0, MSGType::TEXT, MSGEncryption::XOR, MSGCompression::RLE);
-    origin.setEncryptionKey(key, strlen(key) + 1);  // TODO: ADD ENCRYPTION SUPPORT
-    origin.encodeMessage();     // generate header, payload, footer
-
-    cout << endl << endl << endl;
-
-    // transmission 
-
-    // add received data in decode mode (false argument)
-    dst.addData(origin.getMessage(), origin.getMessageSize(), false);
-    dst.setEncryptionKey(key, strlen(key) + 1);  // TODO: ADD ENCRYPTION SUPPORT
-
-    dst.decodeMessage();    // extract metadata and payload
-
-    // use received and decoded data
-    char* test2 = (char*)dst.getMessage();
-    cout << test2 << endl;
-    return 0;
-
-
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
     bool running = true;
 
@@ -231,6 +77,9 @@ int main() {
                     break;
 				case 5:
 					rs232message(); // Test Function for RS232 communication
+					break;
+                case 6:
+					comPortTest(); // Test Function for COM Port
 					break;
                 case 0:
                     inHomeMenu = false;  // Go back to the main menu
@@ -358,4 +207,14 @@ void setCOMport() {
 
 void setSampleRate() {
 	printf("Setting sample rate (placeholder)...\n");
+}
+
+// Function to test COM ports
+void comPortTest() {
+	testCOMPort("COM3", "COM4");
+
+    // Wait for the user to press Enter
+    printf("Press Enter to return to the menu...");
+    getchar(); // Consume the Enter key left in the input buffer
+    getchar(); // Wait for actual user input
 }

@@ -37,6 +37,7 @@ void displayHomeMenu() {
     printf("3. Queue a Message\n");
     printf("4. Display Queued Messages\n");
 	printf("5. RS232 Test\n");
+    printf("6. COM Port Test\n");
     printf("0. Back\n");
     printf("========================\n");
     printf("Enter your choice: ");
