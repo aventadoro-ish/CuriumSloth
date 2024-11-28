@@ -7,7 +7,7 @@
 
 #include "Compression.h"
 #include "Encryption.h"
-#include "linux_utils.h"
+#include "utils.h"
 
 using namespace std;
 

@@ -120,14 +120,13 @@ CPErrorCode COMPort::closePort() {
     if (!isPortOpen()) {
         return CPErrorCode::PORT_IS_CLOSED;
     }
-
+#ifdef _WIN32
     // TODO: !!! put code to close port !!!
     if (!CloseHandle(hCom)) {
         cerr << "Error closing COM port: " << GetLastError() << endl;
         return CPErrorCode::PARAMETER_ERROR;
     }
-
-#ifdef __linux__ 
+#elif defined(__linux__) 
     close(fd);
 #endif
 
