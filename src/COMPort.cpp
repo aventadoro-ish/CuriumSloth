@@ -43,7 +43,7 @@ using namespace std;
 #include <termios.h>	// POSIX terminal control definitions
 #include <sys/ioctl.h>
 
-#include "linux_utils.h"
+#include "utils.h"
 #endif
 
 /*****************************************************************************
@@ -248,7 +248,7 @@ unsigned int COMPort::numInputBytes() {
     return comStat.cbInQue; // Number of bytes in the input buffer
 }
 
-unsigned int COMPort::numOutputButes() {
+unsigned int COMPort::numOutputBytes() {
     if (!isPortOpen()) {
         cerr << "Error: Port is not open." << endl;
         return 0;
@@ -265,7 +265,7 @@ unsigned int COMPort::numOutputButes() {
 }
 
 bool COMPort::isPortOpen() {
-	return (hCom != INVALID_HANDLE_VALUE) && is_port_open; // Check if the port is open
+	return (hCom != INVALID_HANDLE_VALUE); // Check if the port is open
 }
 
 bool COMPort::canWrite() {

@@ -92,7 +92,7 @@ int rs232test() {
 
     // Receive a response (if any)
     char msgIn[BUFSIZE] = { 0 };
-    if (comRx.receiveMessage((void*)msgIn, BUFSIZE, 0, 5000) == CPErrorCode::SUCCESS) {
+    if (comRx.receiveMessage((void*)msgIn, BUFSIZE) == CPErrorCode::SUCCESS) {
         printf("\nMessage Received: \n%s\n", msgIn);
     }
     else {

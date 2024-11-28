@@ -1,13 +1,14 @@
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include "COMPortTest.h"
-
 /* COMPortTest.cpp : Tests the COMPort 
  * Date: Nov 2024
  * Author:
  *         Gobind Matharu
  */
+
+#include <iostream>
+#include <thread>
+#include <chrono>
+#include "COMPortTest.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -58,7 +59,8 @@ void testCOMPort(const char* txPortName, const char* rxPortName) {
     }
 
     // Allow some time for the message to reach RX
-    this_thread::sleep_for(chrono::milliseconds(100));
+    sleep_ms(100);
+    //std::this_thread::sleep_for(chrono::milliseconds(100));
 
     // Check for data in RX input buffer
     unsigned int rxInputBytes = rxPort.numInputBytes();
