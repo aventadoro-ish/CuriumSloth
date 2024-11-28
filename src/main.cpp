@@ -39,6 +39,9 @@ void setSampleRate();
 // Global message queue definition
 queue<string> messageQueue;
 size_t maxMsgSize = 1000;
+// 1500 ethernet
+
+
 
 void recSide() {
 
