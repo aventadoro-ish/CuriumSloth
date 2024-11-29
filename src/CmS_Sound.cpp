@@ -89,7 +89,7 @@ int AudioRecorder::prepareBuffer(int seconds) {
 	}
 
 #ifdef _WIN32
-	recBufSize = seconds * recSamplesPerSencod;
+	recBufSize = seconds * recSamplesPerSencod * (recBitsPerSample / 8) * recNumCh;
 	recBuf = (AudioBufT*)malloc(recBufSize * sizeof(AudioBufT));
 	
 #elif __linux__
@@ -240,6 +240,11 @@ int AudioRecorder::playBuffer() {
 	MMRESULT	mmErr;
 	int		rc;
 
+	if (!recBuf || recBufSize == 0) {
+		cerr << "ERROR: Playback buffer is invalid or empty." << endl;
+		return -1;
+	}
+
 	// stop previous note (just in case)
 	waveOutReset(hWaveOut);   // is this good?
 	ZeroMemory(&waveHeaderOut, sizeof(WAVEHDR)); // Ensure all fields are zeroed
@@ -247,16 +252,22 @@ int AudioRecorder::playBuffer() {
 
 	// get the header ready for playback
 	waveHeaderOut.lpData = (char*)recBuf;
-	waveHeaderOut.dwBufferLength = recBufSize * sizeof(short);
-	rc = waveOutPrepareHeader(hWaveOut, &waveHeaderOut, sizeof(WAVEHDR));
-	if (rc) {
-		cout << "Failed preparing WAVEHDR, error " << rc << endl;
-		return(0);
+	waveHeaderOut.dwBufferLength = recBufSize;                                    //*sizeof(short);
+	mmErr = waveOutPrepareHeader(hWaveOut, &waveHeaderOut, sizeof(WAVEHDR));
+	if (mmErr != MMSYSERR_NOERROR) {
+		cout << "Failed preparing WAVEHDR, error " << mmErr << endl;
+		return -1;
 	}
 	waveHeaderOut.dwFlags &= ~(WHDR_BEGINLOOP | WHDR_ENDLOOP);
 
 	// play the buffer. This is NON-blocking.
 	mmErr = waveOutWrite(hWaveOut, &waveHeaderOut, sizeof(WAVEHDR));
+	if (mmErr != MMSYSERR_NOERROR) {
+        cerr << "ERROR: waveOutWrite failed. Error: " << mmErr << endl;
+        waveOutUnprepareHeader(hWaveOut, &waveHeaderOut, sizeof(WAVEHDR));
+        return -1;
+    }
+
 	// wait for completion
 	rc = waitOnHeader(&waveHeaderOut, 0);
 	// give back resources
