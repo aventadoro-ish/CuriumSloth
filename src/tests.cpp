@@ -100,9 +100,7 @@ void testMessageManager() {
 }
 
 
-
-
-void devTesting() {
+void COMSpeedTest() {
     char ch;
     cout << "Enter t for transmit, r for receive side: ";
     cin >> ch;
@@ -182,12 +180,11 @@ void devTesting() {
     } else {
 
     }
+}
 
 
 
-
-
-
+void devTesting() {
 
 
 }
