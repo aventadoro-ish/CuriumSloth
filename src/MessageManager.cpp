@@ -238,7 +238,7 @@ void MessageManger::tickReceive() {
     }
 
 
-    if (received_ids.find(incoming->getID()) != received_ids.end()) {
+    if (hasMessageBeenReceived(incoming->getID())) {
         // message has been received already
         return;
     }
@@ -299,9 +299,7 @@ void MessageManger::retransmitMessage() {
 }
 
 bool MessageManger::hasMessageBeenReceived(unsigned long int newMsgID) {
-    
-    
-    return false;
+    return received_ids.find(newMsgID) != received_ids.end();
 }
 
 void MessageManger::replayAudio() {
@@ -327,9 +325,11 @@ void MessageManger::replayAudio() {
         idx += msg->getMessageSize();
     }
     
-    AudioRecorder arp = AudioRecorder();
+    AudioRecorder arp = AudioRecorder(8000, 16, 1);
     arp.setBuffer(buf, total_payload_size);
     arp.replayAudio();
+
+    free(buf);
 
 
 }

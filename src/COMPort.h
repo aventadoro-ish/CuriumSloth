@@ -31,7 +31,7 @@ enum class COMPortBaud {
     COM_BAUD_115200     = 115200,
     COM_BAUD_230400     = 230400,
     COM_BAUD_460800     = 460800,
-    COM_BAUD_660800     = 660800,   // non-standard
+    COM_BAUD_660800     = 650000, // 660800,   // non-standard
     COM_BAUD_MAX        = 750000,
     COM_BAUD_921600     = 921600
 };

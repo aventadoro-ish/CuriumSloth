@@ -188,7 +188,15 @@ public:
 	/// <param name="bufSize">Size of the buffer</param>
 	void setBuffer(void* buf, uint32_t bufSize) {
 		recBuf = (AudioBufT*)buf;
+
+#ifdef _WIN32
 		recBufSize = bufSize;
+#elif __linux__
+		// interface returns short* buf, but linux uses char* buf
+		// so linux should report bufSize to be 2 times less
+		recBufSize = bufSize;
+#else
+#endif
 	}
 
 };

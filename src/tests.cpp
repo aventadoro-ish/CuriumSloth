@@ -213,7 +213,7 @@ void devTesting() {
         ar.recordAudio(5);
         cout << "Confirm audio" << endl;
         ar.replayAudio();
-
+        cout << "Total recording size is: " << hex << ar.getBufferSize() << dec << endl;
         cout << "Sending data" << endl;
 
         txMan.transmitData(1, MSGType::AUDIO, ar.getBuffer(), ar.getBufferSize());
@@ -247,8 +247,8 @@ void devTesting() {
 
         for (;;) {
             if (kbhit()) {
-
-                cin >> ch;
+                ch = _getch();
+                // cin >> ch;
 
                 if (ch == 'r') {
                     rxMan.replayAudio();

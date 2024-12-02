@@ -41,7 +41,8 @@ class MessageManger {
     QueueProper<Message> receive_queue;
 
     // awaiting confirmation (retransmit based on timeout)
-    QueueProper<Message> pending_confirmation_queue;
+    // simpler scheme with 1 active message at a time was used instead
+    // QueueProper<Message> pending_confirmation_queue;
 
     int senderID;
 

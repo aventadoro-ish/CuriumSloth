@@ -89,8 +89,17 @@ int AudioRecorder::prepareBuffer(int seconds) {
 	}
 
 #ifdef _WIN32
-	recBufSize = seconds * recSamplesPerSencod * (recBitsPerSample / 8) * recNumCh;
-	recBuf = (AudioBufT*)malloc(recBufSize * sizeof(AudioBufT));
+	long unsigned int bytesPerSample = recBitsPerSample / 8;
+	long unsigned int bytesPerSecond = bytesPerSample * recNumCh * recSamplesPerSencod;
+	long unsigned int bytesToAllocate = bytesPerSecond * seconds;
+	// long unsigned int elementsToAllocate = bytesToAllocate / sizeof(short);
+	// recBufSize = elementsToAllocate;
+	recBufSize = bytesToAllocate;
+
+	
+	// recBufSize = seconds * recSamplesPerSencod * (recBitsPerSample / 8) * recNumCh;
+	
+	recBuf = (AudioBufT*)malloc(recBufSize);
 	
 #elif __linux__
 	long unsigned int bytesPerSample = recBitsPerSample / 8;
@@ -171,7 +180,7 @@ int AudioRecorder::initializeRecording() {
 	ZeroMemory(&waveHeaderIn, sizeof(WAVEHDR)); // Ensure all fields are zeroed
 	waveHeaderIn.lpData = (char*)recBuf;
 	// waveHeaderIn.dwBufferLength = recBufSize * sizeof(short) - 1;
-	waveHeaderIn.dwBufferLength = recBufSize * sizeof(short);
+	waveHeaderIn.dwBufferLength = recBufSize;
 	rc = waveInPrepareHeader(hWaveIn, &waveHeaderIn, sizeof(WAVEHDR));
 	if (rc) {
 		cerr << "Failed preparing input WAVEHDR, error " << rc << endl;
