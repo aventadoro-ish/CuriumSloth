@@ -551,3 +551,7 @@ unsigned int Message::getOriginalSize() {
 unsigned int Message::getPayloadSize() {
     return header.payloadSize;
 }
+
+unsigned long int Message::getID() {
+    return header.messageID;
+}

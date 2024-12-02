@@ -204,5 +204,6 @@ public:
 
     unsigned int getPayloadSize();
 
+    unsigned long int getID();
 
 };

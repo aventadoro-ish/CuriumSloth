@@ -1,5 +1,5 @@
 #pragma once
-
+#include <unordered_set>
 #include "Message.h"
 #include "Queue2.h"
 #include "COMPort.h"
@@ -36,7 +36,9 @@ class MessageManger {
     // awaiting sending (first in, first out)
     QueueProper<Message> send_queue;
 
-    QueueProper<Message> in_queue;
+
+    std::unordered_set<unsigned long int> received_ids;
+    QueueProper<Message> receive_queue;
 
     // awaiting confirmation (retransmit based on timeout)
     QueueProper<Message> pending_confirmation_queue;
@@ -53,6 +55,8 @@ class MessageManger {
 
     void transmitMessage();
     void retransmitMessage();
+
+    bool hasMessageBeenReceived(unsigned long int newMsgID);
     
 
 public:

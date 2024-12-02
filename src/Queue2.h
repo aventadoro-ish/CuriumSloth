@@ -42,6 +42,9 @@ public:
     /// @param new_data data to copy into the queue
     void push(T* new_data);
 
+    // untested method!!!
+    T* peek(int n);
+
     bool isEmpty();
 
 

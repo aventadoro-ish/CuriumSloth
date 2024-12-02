@@ -22,7 +22,7 @@ MessageManger::MessageManger(int senderID, size_t max_msg_size) {
     active_message = nullptr;
 
     send_queue = QueueProper<Message>();
-    in_queue = QueueProper<Message>();
+    receive_queue = QueueProper<Message>();
 }
 
 MessageManger::~MessageManger() {
@@ -42,6 +42,8 @@ int MessageManger::transmitData(int receiverID,
                                 size_t bufLen) {
     int num_encode_faults = 0;
     int num_add_faults = 0;
+    cout << "Total payload size is 0x" << hex << bufLen << dec << endl; 
+    size_t sendingSize = 0;
 
     // round up int division
     int num_msg = (bufLen + max_message_size - 1) / max_message_size;
@@ -50,7 +52,7 @@ int MessageManger::transmitData(int receiverID,
     // may be less than max_message_size bytes long
     for (int i = 0; i < num_msg - 1; i++) {
         Message* msg = new Message();
-
+        sendingSize += max_message_size;
         void* start_idx = (void*)((unsigned long int)buf + (i * max_message_size));
         
 #ifdef MM_DEBUG_ENABLE
@@ -85,6 +87,10 @@ int MessageManger::transmitData(int receiverID,
         (void*)((unsigned long int)buf + ((num_msg - 1) * max_message_size));
     size_t len = bufLen - ((num_msg - 1) *
                          max_message_size);  // TODO: check for off-by-1 error
+    
+    sendingSize += len;
+
+   
     msg->addData(start_idx, len);
     msg->describeData(senderID, receiverID,
                      generateMsgID(), 
@@ -95,6 +101,8 @@ int MessageManger::transmitData(int receiverID,
     msg->encodeMessage();
 
     send_queue.push(msg);
+
+    cout << "Encoded size = " << sendingSize << endl;
 
     return 0;
 }
@@ -230,8 +238,13 @@ void MessageManger::tickReceive() {
     }
 
 
+    if (received_ids.find(incoming->getID()) != received_ids.end()) {
+        // message has been received already
+        return;
+    }
 
-    in_queue.push(incoming);
+    received_ids.insert(incoming->getID());
+    receive_queue.push(incoming);
 
 }
 
@@ -285,17 +298,23 @@ void MessageManger::retransmitMessage() {
     transmit_attempts++;
 }
 
+bool MessageManger::hasMessageBeenReceived(unsigned long int newMsgID) {
+    
+    
+    return false;
+}
+
 void MessageManger::replayAudio() {
     QueueProper<Message> tempQueue = QueueProper<Message>();
 
 
     size_t total_payload_size = 0;
-    while(!in_queue.isEmpty()) {
-        Message* msg = in_queue.pop();
+    while(!receive_queue.isEmpty()) {
+        Message* msg = receive_queue.pop();
         total_payload_size += msg->getMessageSize();
         tempQueue.push(msg);
     }
-
+    cout << "Total payload size is 0x" << hex << total_payload_size << dec << endl; 
     void* buf = malloc(total_payload_size);
     
 
@@ -304,7 +323,8 @@ void MessageManger::replayAudio() {
         Message* msg = tempQueue.pop();
 
         memcpy((void*)((size_t)buf + idx), msg->getMessage(), msg->getMessageSize());
-        in_queue.push(msg);
+        receive_queue.push(msg);
+        idx += msg->getMessageSize();
     }
     
     AudioRecorder arp = AudioRecorder();

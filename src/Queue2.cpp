@@ -76,6 +76,25 @@ void QueueProper<T>::push(T* new_data) {
     return;
 }
 
+template <typename T>
+T* QueueProper<T>::peek(int n) {
+    int count = 0;
+
+    Node2<T>* node = head;
+
+    // 0 -> head; 1 -> head + 1
+    while (node != nullptr && count != n) {
+        node = node->pNext;
+        count++;
+    }
+
+    if (node == nullptr) {
+        cerr << "ERROR! Trying to peek node that is outside of queue range";
+    }
+
+
+    return nullptr;
+}
 
 template <typename T>
 bool QueueProper<T>::isEmpty() {

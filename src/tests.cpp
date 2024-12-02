@@ -8,6 +8,7 @@
 #include "COMPort.h"
 #include "Message.h"
 #include "MessageManager.h"
+#include "CmS_Sound.h"
 #include "utils.h"
 
 
@@ -180,12 +181,91 @@ void COMSpeedTest() {
     } else {
 
     }
+
 }
 
 
 
 void devTesting() {
+    char ch;
+    cout << "Enter t for transmit, r for receive side: ";
+    cin >> ch;
+
+    // COMPortBaud baud = COMPortBaud::COM_BAUD_460800; // works
+    COMPortBaud baud = COMPortBaud::COM_BAUD_MAX ; //
+    size_t maxMes = 0x800;
+
+    if (ch == 't') {
+        cout << "Transmit side: Openning COM3" << endl;
+
+        // cout << sizeof(MSGHeader) - sizeof(short) << endl;
+        COMPort tx = COMPort(baud, CPParity::EVEN, 1);
+        tx.openPort("COM3");
+        MessageManger txMan = MessageManger(0, maxMes);
+        txMan.setCOMPort(&tx);
+
+        cout << "Port is open. Populating buffer" << endl;
+    
+        auto start = chrono::steady_clock::now();
+
+        AudioRecorder ar = AudioRecorder(8000, 16, 1);
+        cout << "Record audio" << endl;
+        ar.recordAudio(5);
+        cout << "Confirm audio" << endl;
+        ar.replayAudio();
+
+        cout << "Sending data" << endl;
+
+        txMan.transmitData(1, MSGType::AUDIO, ar.getBuffer(), ar.getBufferSize());
+
+        for (;;) {
+            if (kbhit()) {
+                tx.closePort();
+                cout << "exiting" << endl;
+                break;
+            }
+
+            if (!txMan.tick()) {
+                break;
+            }
+        
+        }
+
+        auto end = chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        
+    } else if (ch == 'r') {
+        cout << "Receive side: Openning COM8" << endl;
+
+        COMPort rx = COMPort(baud, CPParity::EVEN, 1);
+        rx.openPort("COM8");
+        MessageManger rxMan = MessageManger(1, maxMes);
+        rxMan.setCOMPort(&rx);
+        
+        cout << "Port is open. Waiting for input" << endl;
 
 
+        for (;;) {
+            if (kbhit()) {
+
+                cin >> ch;
+
+                if (ch == 'r') {
+                    rxMan.replayAudio();
+                } else {
+                    rx.closePort();
+                    cout << "exiting" << endl;
+                    break;
+                }
+
+            }
+
+            rxMan.tick();
+
+        }
+
+    } else {
+
+    }
 }
 
