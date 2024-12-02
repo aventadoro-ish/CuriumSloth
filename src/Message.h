@@ -10,34 +10,40 @@
 #include <stdio.h>	
 
 
-enum class MSGType {
+enum class MSGType : unsigned short {
     TEXT,       // for plain text ascii
     AUDIO,      // for audio
     SYSTEM      // for system events, e.g. receive acknowledge, audio settings sync
 };
 
-enum class MSGEncryption {
+enum class MSGEncryption : unsigned short {
     NONE,
     AES,
     XOR
 };
 
-enum class MSGCompression {
+enum class MSGCompression : unsigned short {
     NONE,
     HUFFMAN,
     RLE
 };
 
+enum class MSGSystemMessages {
+    ACK,
+    NACK
+};
+
 
 struct MSGHeader {
-    int senderID;
-    int receiverID;
+    short senderID;
+    short receiverID;
     unsigned long int messageID;
     MSGType type;
     MSGEncryption encryption;
     MSGCompression compression;
     unsigned int decompressedSize;
     unsigned int payloadSize;   // in bytes
+    short checksum;
 
     MSGHeader() {
         senderID = 0;
@@ -47,11 +53,8 @@ struct MSGHeader {
         compression = MSGCompression::NONE;
         decompressedSize = 0;
         payloadSize = 0;
+        checksum = 0;
     };
-};
-
-struct MSGFooter {
-    unsigned int checksum;
 };
 
 
@@ -86,24 +89,27 @@ class Message {
     size_t sizeO;       // Output message buffer size
 
     MSGHeader header;
-    MSGFooter footer;
 
     char* encryptionKey;
     size_t eKeyLen;
     bool isEncode;
 
-
-
+    /// @brief Computes/validates header member. In encode mode, checksum is
+    /// calculated and added to the header. In decode mode, checksum is calculated
+    /// and compared to the checksum of the received header.
+    /// @return false in header is corrupted. true otherwise
+    bool validateHeader();
 
     int encryptMessage();
     int compressMessage();
-    int calculateChecksum();
     int prepareOutput();
 
     int getHeader();
     int decompressMessage();
     int decryptMessage();
     int preparePayload();
+
+    int handleSystemMessage();
 
 
 

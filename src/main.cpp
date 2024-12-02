@@ -17,7 +17,7 @@
 #include "Queue.h"
 #include "Message.h"
 #include "MessageManager.h"
-
+#include "tests.h"
 #include "utils.h"
 
 #ifdef _WIN32
@@ -48,6 +48,9 @@ void rs232message();
 void comPortTest();
 
 int main() {
+    devTesting();
+    return 0;
+
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
     bool running = true;
 

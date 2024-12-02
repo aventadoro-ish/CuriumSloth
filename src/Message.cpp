@@ -11,6 +11,7 @@
 
 using namespace std;
 
+// #define MESSAGE_DEBUG_PRINTS
 
 void printHexDump(void* buf, size_t size);
 
@@ -43,22 +44,38 @@ Message::~Message() {
 
 }
 
+bool Message::validateHeader() {
+    short* ptr = (short*)&header;
+    short sum = 0;
+    cout << hex;
+    // for all fields except for checksum field
+    const int num_fields = sizeof(MSGHeader) / sizeof(short) - sizeof(short);
+    for (int i = 0; i < num_fields; i++) {
+        sum += *ptr; 
+        ptr++;
+    }
+    
+    if (isEncode) {
+        header.checksum = sum;
+        return true;
+    }
 
-
+    // decoding
+    return header.checksum == sum;
+}
 
 int Message::encryptMessage() {
-    if (bufA == nullptr) {
-        cerr << "ERROR! Can't encrypt an nullptr buffer" << endl;
-        return -1;
-    }
+  if (bufA == nullptr) {
+    cerr << "ERROR! Can't encrypt an nullptr buffer" << endl;
+    return -1;
+  }
 
-    if (bufB != nullptr) {
-        cerr << "WARNING! Overriding bufB" << endl;
-        return -1;
-    }
+  if (bufB != nullptr) {
+    cerr << "WARNING! Overriding bufB" << endl;
+    return -1;
+  }
 
-
-    switch (header.encryption) {
+  switch (header.encryption) {
     case MSGEncryption::NONE:
         bufB = (void*)malloc(sizeA);
         sizeB = sizeA;
@@ -132,23 +149,6 @@ int Message::compressMessage() {
     return 0;
 }
 
-int Message::calculateChecksum() {
-    if (bufC == nullptr) {
-        cerr << "ERROR! Can't compress an nullptr buffer" << endl;
-        return -1;
-    }
-
-    unsigned int* bufInt = (unsigned int*)bufC;
-    unsigned int sum = 0;
-    for (int i = 0; i < sizeC / sizeof(unsigned int); i++) {
-        sum += bufInt[i];
-    }
-
-    footer.checksum = sum;
-
-    return 0;
-}
-
 int Message::prepareOutput() {
     if (bufC == nullptr) {
         cerr << "ERROR! Can't prepare an nullptr buffer" << endl;
@@ -161,8 +161,9 @@ int Message::prepareOutput() {
     }
 
     header.payloadSize = sizeC;
+    validateHeader();
 
-    size_t total_size = sizeof(MSGHeader) + sizeC + sizeof(MSGFooter);
+    size_t total_size = sizeof(MSGHeader) + sizeC;
     // cout << "Output buffer size = " << total_size << endl;
     // cout << "Message size = " << strlen((char*)bufC) << endl;
 
@@ -175,16 +176,11 @@ int Message::prepareOutput() {
 
     // cout << "bufO starts at " << hex << (unsigned long int)bufO << endl;
     // cout << "header starts at " << hex << (unsigned long int)bufO + sizeof(MSGHeader) << "\t" << sizeof(MSGHeader) << endl;
-    // cout << "footer starts at " << hex << (unsigned long int)bufO + total_size - sizeof(MSGFooter) << "\t" << sizeof(MSGFooter)  << endl;
-
+  
     void* payloadStartIdx = (void*)((unsigned long int)bufO + sizeof(MSGHeader));
     memcpy(payloadStartIdx, bufC, sizeC);
 
     memcpy(bufO, &header, sizeof(MSGHeader));
-    
-
-    void* footerStartIdx = (void*)((unsigned long int)bufO + total_size - sizeof(MSGFooter));
-    memcpy(footerStartIdx, &footer, sizeof(MSGFooter));
     
 
     return 0;
@@ -201,6 +197,9 @@ int Message::getHeader() {
     }
 
     memcpy(&header, bufA, sizeof(MSGHeader));
+    if (!validateHeader()) {
+        return -1;  // invalid header
+    }
 
     return 0;
 }
@@ -218,6 +217,16 @@ int Message::decompressMessage() {
 
     // pointer to the start of the message excluding the header 
     void* messageStartIdx = (void*)((unsigned long int)bufA + sizeof(MSGHeader));
+
+    if (header.payloadSize != sizeA - sizeof(MSGHeader)) {
+#ifdef MESSAGE_DEBUG_PRINTS
+        cerr << "WARNING! Message::decompressMessage() -> header.payloadSize (" 
+             << header.payloadSize << ") != received payload size (" 
+             << sizeA - sizeof(MSGHeader) << ")" << endl;
+#endif // MESSAGE_DEBUG_PRINTS
+        return -1;
+    }
+
 
     switch (header.compression) {
     case MSGCompression::NONE:
@@ -314,14 +323,31 @@ int Message::preparePayload() {
     sizeO = sizeC;
     memcpy(bufO, bufC, sizeO);
 
+    if (sizeO != header.decompressedSize) {
+        cerr << "WARNING! Message::preparePayload() -> sizeO != header.decompressedSize" << endl;
+    }
+
     // cout << "Payload message" << endl;
     // printHexDump(bufO, sizeO);
 
     return 0;
 }
 
+int Message::handleSystemMessage() {
+    MSGSystemMessages* payloadStart = (MSGSystemMessages*)((size_t)bufA + sizeof(MSGHeader));
 
+    if (*payloadStart == MSGSystemMessages::ACK || 
+        *payloadStart == MSGSystemMessages::NACK) {
+        sizeO = sizeof(MSGSystemMessages);
+        bufO = malloc(sizeO);
+        *(MSGSystemMessages*)bufO = *payloadStart;
+        return 0;
+    }
 
+    // invalid system message
+    cerr << "ERROR! Invalid System Message was received: " << (int)*payloadStart << endl;
+    return -1;
+}
 
 int Message::addData(void* buf, size_t size, bool encode) {
     if (bufA != nullptr) {
@@ -336,13 +362,6 @@ int Message::addData(void* buf, size_t size, bool encode) {
     }
 
     memcpy(bufA, buf, size);
-    
-    // cout << "Message @" << hex << this << " adding data: '";
-    // char* ch = (char*)buf;
-    // for (int i = 0; i < size; i++) {
-    //     cout << ch[i];
-    // }
-    // cout << "'" << endl;
 
     isEncode = encode;
 
@@ -373,13 +392,40 @@ size_t Message::getMessageSize() {
 
 void Message::printHeader() {
     cout << "Message header:" << endl;
-    cout << "\tSender:      " << header.senderID << endl; 
-    cout << "\tReceiver:    " << header.receiverID << endl; 
-    cout << "\tMessage:     " << header.messageID << endl; 
-    cout << "\tEncryption:  " << (int) header.encryption << endl; 
-    cout << "\tCompression: " << (int) header.compression << endl; 
+    cout << "\tSender ID:   " << header.senderID << endl; 
+    cout << "\tReceiver ID: " << header.receiverID << endl; 
+    cout << "\tMessage ID:  " << header.messageID << endl; 
+    cout << "\tEncryption:  "; 
+    switch (header.encryption) {
+    case MSGEncryption::NONE:       cout << "none";         break;
+    case MSGEncryption::AES:        cout << "AES";          break;
+    case MSGEncryption::XOR:        cout << "XOR";          break;
+    default:                        cout << "unsupported";  break;
+    }
+    cout << endl;
+
+    cout << "\tCompression: "; 
+    switch (header.compression) {
+    case MSGCompression::NONE:      cout << "none";         break;
+    case MSGCompression::HUFFMAN:   cout << "Huffman";      break;
+    case MSGCompression::RLE:       cout << "RLE";          break;
+    default:                        cout << "unsupported";  break;
+    }
+    cout << endl;
+
+    cout << "\tType: "; 
+    switch (header.type) {
+    case MSGType::AUDIO:            cout << "audio";        break;
+    case MSGType::TEXT:             cout << "text";         break;
+    case MSGType::SYSTEM:           cout << "system";       break;
+    default:                        cout << "unsupported";  break;;
+    }
+    cout << endl;
+
+
     cout << "\tOriginal size:" << header.decompressedSize << endl; 
     cout << "\tPayload size:" << header.payloadSize << endl; 
+    cout << "\tChecksum:" << header.checksum << endl; 
 }
 
 
@@ -417,10 +463,18 @@ int Message::encodeMessage() {
         cerr << "WARNING! encrypting a message using the default key: 0" << endl;
     }
 
-    if (encryptMessage()) { cerr << "ERROR! encrypt message failed!" << endl; }
-    if (compressMessage()) { cerr << "ERROR! compress message failed!" << endl; }
-    if (calculateChecksum()) { cerr << "ERROR! checksum calculation failed!" << endl; }
-    if (prepareOutput()) { cerr << "ERROR! unable to prepare output!" << endl; }
+    if (encryptMessage()) {
+        cerr << "ERROR! encrypt message failed!" << endl;
+        return -1;
+    }
+    if (compressMessage()) {
+        cerr << "ERROR! compress message failed!" << endl;
+        return -1;
+    }
+    if (prepareOutput()) {
+        cerr << "ERROR! unable to prepare output!" << endl;
+        return -1;
+    }
 
     // printHeader();
 
@@ -443,13 +497,28 @@ int Message::decodeMessage() {
         return -1;
     }
 
-    if (getHeader()) { cerr << "ERROR! Unable to read header of the message" << endl; }
-    printHeader();
-    if (decompressMessage()) { cerr << "ERROR! decompress message failed" << endl; }
-    if (decryptMessage()) { cerr << "ERROR! decrypt message failed" << endl; }
-    if (preparePayload()) { cerr << "ERROR! payload prep failed" << endl; }
-        
+    if (getHeader()) { 
+        cerr << "ERROR! Unable to read header of the message" << endl;
+        return -1;
+    }
 
+    if (header.type == MSGType::SYSTEM) {
+        return handleSystemMessage();
+    }
+
+    if (decompressMessage()) { 
+        cerr << "ERROR! decompress message failed" << endl;
+        return -1;
+    }
+    if (decryptMessage()) { 
+        cerr << "ERROR! decrypt message failed" << endl;
+        return -1;
+    }
+    if (preparePayload()) { 
+        cerr << "ERROR! payload prep failed" << endl;
+        return -1;
+    }
+        
 
     return 0;
     

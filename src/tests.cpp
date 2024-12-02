@@ -98,3 +98,97 @@ void testMessageManagerSendSide() {
 void testMessageManager() {
 
 }
+
+
+
+
+void devTesting() {
+    char ch;
+    cout << "Enter t for transmit, r for receive side: ";
+    cin >> ch;
+
+    // COMPortBaud baud = COMPortBaud::COM_BAUD_460800; // works
+    COMPortBaud baud = COMPortBaud::COM_BAUD_MAX ; //
+    size_t bufSize = 0x8fff;
+    size_t maxMes = 0x800;
+
+    if (ch == 't') {
+        cout << "Transmit side: Openning COM3" << endl;
+
+        // cout << sizeof(MSGHeader) - sizeof(short) << endl;
+        COMPort tx = COMPort(baud, CPParity::EVEN, 1);
+        tx.openPort("COM3");
+        MessageManger txMan = MessageManger(0, maxMes);
+        txMan.setCOMPort(&tx);
+
+        cout << "Port is open. Populating buffer" << endl;
+    
+        auto start = chrono::steady_clock::now();
+        cout << "Transmitting " << bufSize / 1024 << " kB in " << maxMes << " chunks" << endl;
+
+
+        char* buf = (char*) malloc(bufSize);
+
+        for (int i = 0; i < bufSize; i++) {
+            buf[i] = (char) i &0xff;
+        }
+
+        cout << "Sending data" << endl;
+
+        txMan.transmitData(1, MSGType::AUDIO, buf, bufSize);
+
+        for (;;) {
+            if (kbhit()) {
+                tx.closePort();
+                cout << "exiting" << endl;
+                break;
+            }
+
+            if (!txMan.tick()) {
+                break;
+            }
+        
+        }
+
+        auto end = chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        
+        cout << endl << endl << endl << dec;
+        cout << "Transmitted " << bufSize / 1024 << " kB in " << maxMes << " chunks in " << elapsed / 1000.0 << " seconds" << endl;
+        cout << "Average transmission rate = " << 1000.0 * (double)bufSize / 1024.0 / elapsed << " kB/s" << endl;
+
+    } else if (ch == 'r') {
+        cout << "Receive side: Openning COM8" << endl;
+
+        COMPort rx = COMPort(baud, CPParity::EVEN, 1);
+        rx.openPort("COM8");
+        MessageManger rxMan = MessageManger(1, maxMes);
+        rxMan.setCOMPort(&rx);
+        
+        cout << "Port is open. Waiting for input" << endl;
+
+
+        for (;;) {
+            if (kbhit()) {
+                rx.closePort();
+                cout << "exiting" << endl;
+                break;
+            }
+
+            rxMan.tick();
+
+        }
+
+    } else {
+
+    }
+
+
+
+
+
+
+
+
+}
+

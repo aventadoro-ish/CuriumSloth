@@ -6,3 +6,7 @@
 /// Transmitter sends a message broken up into chunks
 /// Receiver accepts the messages 1 at a time
 void testMessageManager();
+
+
+/// @brief Function to test in-development features
+void devTesting();

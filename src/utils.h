@@ -10,8 +10,10 @@
 void sleep_ms(unsigned int milliseconds); // cross-platform sleep function
 
 
+#ifdef _WIN32
+#include <conio.h>  // kbhit is defined here for Windows
 
-#ifdef __linux__
+#elif defined(__linux__)
 int kbhit(void);
 
 #endif

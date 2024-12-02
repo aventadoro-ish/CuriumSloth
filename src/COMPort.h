@@ -31,6 +31,8 @@ enum class COMPortBaud {
     COM_BAUD_115200     = 115200,
     COM_BAUD_230400     = 230400,
     COM_BAUD_460800     = 460800,
+    COM_BAUD_660800     = 660800,   // non-standard
+    COM_BAUD_MAX        = 750000,
     COM_BAUD_921600     = 921600
 };
 
@@ -69,7 +71,7 @@ class COMPort {
 #ifdef _WIN32
     CPErrorCode writeToPort(void* buf, unsigned int num_bytes);
     
-    CPErrorCode readFromPort(void* buf, size_t bufSize);
+    CPErrorCode readFromPort(void* buf, size_t bufSize, size_t* bytesRead = nullptr);
 
     CPErrorCode openPortPlatform();
 
@@ -107,11 +109,13 @@ public:
     /// @brief Tries to receive the message from an open COM port
     /// @param buf pointer to the buffer for the message
     /// @param bufSize buffer size in bytes
-    /// @param maxMessage stop receiving after maxMessage number of bytes are received. Set to 0 to default to bufSize
+    /// @param readBytes pass a pointer to size_t to get the number of bytes read
+    /// @param maxMessage (NOT IMPLEMENTED) stop receiving after maxMessage number of bytes are received. Set to 0 to default to bufSize
     /// @return 0 if success
     CPErrorCode receiveMessage(
         void* buf, 
         std::size_t bufSize,
+        std::size_t* readBytes = nullptr,
         std::size_t maxMessage = 0);
 
 
@@ -150,5 +154,8 @@ public:
     /// and baud rate
     /// @return number of ms
     unsigned int getTimeoutMs();
+
+
+    unsigned int getTimeToTransmitNBytesMs(size_t n_bytes);
 
 };

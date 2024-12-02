@@ -4,6 +4,20 @@
 #include "Queue2.h"
 #include "COMPort.h"
 
+enum class MMTransmitState {
+    WAIT_INPUT,     // wait for new data to transmit 
+                    // send_queue is empty and active_file is nullptr
+    WAIT_TO_SEND,   // wait for output buffer to be clear and write timeout to occur
+    READY_TO_SEND,  // ready to transmit a message
+    AWAITING_ACK,   // waiting for ACK, NACK or timeout
+    WAIT_TO_RESEND, // waiting for retransmit a corrupted message
+    SEND_ACK,
+    SEND_NACK,
+
+    ERROR_STATE,
+    num_states
+};
+
 
 /// @brief MessageManger handles sending data to a receiver. It splits
 /// long data into chunks/multiple messages, queues up messages to be sent,
@@ -13,6 +27,11 @@
 class MessageManger {
     // determines how to split messages
     size_t max_message_size;
+
+    int transmit_attempts;
+    MMTransmitState txState;
+    Message* active_message;
+    std::chrono::steady_clock::time_point last_transmission;
 
     // awaiting sending (first in, first out)
     QueueProper<Message> send_queue;
@@ -28,6 +47,13 @@ class MessageManger {
 
     COMPort* port;
 
+    void tickReceive();
+    void sendAckState(MSGSystemMessages state);
+    
+
+    void transmitMessage();
+    void retransmitMessage();
+    
 
 public:
     MessageManger(int senderID, size_t max_msg_size = 0x3fff);
@@ -56,7 +82,7 @@ public:
     }
 
     size_t getBufferSize() {
-        return max_message_size + sizeof(MSGHeader) + sizeof(MSGFooter);
+        return max_message_size + sizeof(MSGHeader);
     }
 
 

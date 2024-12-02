@@ -4,6 +4,9 @@
 #include <cmath>
 
 
+// #define COMPORT_DEBUG_PRINT
+
+
 
 // defines timeout in terms of a number of bytes at a certain baud
 // if the time passes equivalent to the transmission of this number of bytes
@@ -15,14 +18,13 @@ using namespace std;
 
 #ifdef _WIN32
 /*****************************************************************************
- * 							WINDOWS IMPLEMENTATION							 *
+ * 							WINDOWS IMPORTS							 *
  *****************************************************************************/
 
-// TODO: !!! put Windows-specific implementation here !!! 
 
 #elif __linux__
 /*****************************************************************************
- * 							LINUX IMPLEMENTATION							 *
+ * 							LINUX IMPORTS							 *
  *****************************************************************************/
 
 /*	RS232 Communication : Linux function implementations 
@@ -57,6 +59,9 @@ COMPort::COMPort(COMPortBaud baud, CPParity parity, int stop_bits) {
     this->baud = baud;
     this->parity = parity;
     this->stop_bits = stop_bits;
+#ifdef _WIN32
+    hCom = nullptr;
+#endif
 }
 
 COMPort::~COMPort() {
@@ -68,6 +73,9 @@ COMPort::~COMPort() {
         free(port_name);
     }
 }
+
+
+
 
 CPErrorCode COMPort::openPort(char* port_name) {
     if (isPortOpen()) {
@@ -91,15 +99,14 @@ CPErrorCode COMPort::sendMessage(void* buf, unsigned int num_bytes) {
         return CPErrorCode::PORT_IS_CLOSED;
     }
 
-    // estimate the transmission time
-    // 8 bits + parity if enabled + start bit + stop bits
-    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
-    double transmission_time = num_bits_per_byte * num_bytes * 3.0 / (int)baud ;
-    transmission_time += getTimeoutMs() / 1000.0;
+    double transmission_time = getTimeToTransmitNBytesMs(num_bytes) / 1000.0;
+
     last_transmission_end = chrono::steady_clock::now() +
                             chrono::duration_cast<chrono::steady_clock::duration>(
                                     chrono::duration<double>(transmission_time));
-    cout << "Transmission time = " << transmission_time << endl;
+#ifdef COMPORT_DEBUG_PRINT
+    cout << "Transmission time (s) = " << transmission_time << endl;
+#endif // COMPORT_DEBUG_PRINT
 
 
     return writeToPort(buf, num_bytes);;
@@ -107,13 +114,14 @@ CPErrorCode COMPort::sendMessage(void* buf, unsigned int num_bytes) {
 
 CPErrorCode COMPort::receiveMessage(void* buf,
                                           size_t bufSize,
+                                          size_t* readBytes,
                                           size_t maxMessage) {
     
     if (!isPortOpen()) {
         return CPErrorCode::PORT_IS_CLOSED;
     }
     
-    return readFromPort(buf, bufSize);
+    return readFromPort(buf, bufSize, readBytes);
 }
 
 CPErrorCode COMPort::closePort() {
@@ -140,6 +148,23 @@ unsigned int COMPort::getTimeoutMs() {
 }
 
 
+unsigned int COMPort::getTimeToTransmitNBytesMs(size_t n_bytes) {
+    // estimate the transmission time
+    // 8 bits + parity if enabled + start bit + stop bits
+    int num_bits_per_byte = 8 + abs((int)parity) + 1 + stop_bits;
+    unsigned int transmission_time = num_bits_per_byte * n_bytes * 3 / (int)baud ;
+    transmission_time += getTimeoutMs();
+    return transmission_time;
+}
+
+
+
+
+
+
+
+
+
 #ifdef _WIN32
 /*****************************************************************************
  * 							WINDOWS IMPLEMENTATION							 *
@@ -160,12 +185,35 @@ CPErrorCode COMPort::writeToPort(void* buf, unsigned int num_bytes) {
     return CPErrorCode::SUCCESS;
 }
 
-CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize) {
-    DWORD bytesRead = 0;
-    if (!ReadFile(hCom, buf, bufSize, &bytesRead, nullptr)) {
-        cerr << "Error reading from COM port: " << GetLastError() << endl;
-        return CPErrorCode::READ_FAILED;
+CPErrorCode COMPort::readFromPort(void* buf, size_t bufSize, size_t* bytesRead) {
+    DWORD rxBytes = 0;
+
+    DWORD newBytes = 0;
+    do {
+        if (!ReadFile(hCom, (char*)buf + rxBytes, bufSize - rxBytes, &newBytes, nullptr)) {
+            cerr << "Error reading from COM port: " << GetLastError() << endl;
+            return CPErrorCode::READ_FAILED;
+        }
+
+        rxBytes += newBytes;
+
+
+    } while (newBytes != 0);
+
+    // if (!ReadFile(hCom, buf, bufSize, &rxBytes, nullptr)) {
+    //     cerr << "Error reading from COM port: " << GetLastError() << endl;
+    //     return CPErrorCode::READ_FAILED;
+    // }
+
+#ifdef COMPORT_DEBUG_PRINT
+    cout << "COMPort::readFromPort(..) read " << hex << rxBytes << dec << " bytes";
+#endif // COMPORT_DEBUG_PRINT
+
+    if (bytesRead != nullptr) {
+        *bytesRead = rxBytes;
     }
+
+    
 
     return CPErrorCode::SUCCESS;
 }
@@ -207,15 +255,27 @@ CPErrorCode COMPort::openPortPlatform() {
     }
 
     // Setup timeouts
-    timeouts.ReadIntervalTimeout = 50;
-    timeouts.ReadTotalTimeoutMultiplier = 10;
-    timeouts.ReadTotalTimeoutConstant = 50;
+    // timeouts.ReadIntervalTimeout = 50;
+    // timeouts.ReadTotalTimeoutMultiplier = 10;
+    // timeouts.ReadTotalTimeoutConstant = 50;
+    // timeouts.WriteTotalTimeoutMultiplier = 10;
+    // timeouts.WriteTotalTimeoutConstant = 50;
+
+    timeouts.ReadIntervalTimeout = MAXDWORD;
+    timeouts.ReadTotalTimeoutMultiplier = 0;
+    cout << "timeouts.ReadTotalTimeoutConstant = " << getTimeoutMs() << endl; 
+    timeouts.ReadTotalTimeoutConstant = getTimeoutMs();
     timeouts.WriteTotalTimeoutMultiplier = 10;
     timeouts.WriteTotalTimeoutConstant = 50;
 
     if (!SetCommTimeouts(hCom, &timeouts)) {
         cerr << "Error setting timeouts: " << GetLastError() << endl;
         return CPErrorCode::PARAMETER_ERROR;
+    }
+
+    if (!PurgeComm(hCom, PURGE_RXCLEAR)) {
+        cerr << "Error purging port: " << GetLastError() << endl;
+        return CPErrorCode::READ_FAILED;    
     }
 
     return CPErrorCode::SUCCESS;
@@ -264,7 +324,8 @@ unsigned int COMPort::numOutputBytes() {
 }
 
 bool COMPort::isPortOpen() {
-	return (hCom != INVALID_HANDLE_VALUE); // Check if the port is open
+    // cout << "hCom = " << hCom << endl;
+	return hCom != INVALID_HANDLE_VALUE && hCom != nullptr; // Check if the port is open
 }
 
 bool COMPort::canWrite() {
@@ -285,10 +346,6 @@ bool COMPort::canWrite() {
         return false;
     }
 }
-
-
-unsigned int getTimeoutMs();
-
 
 #elif __linux__
 /*****************************************************************************
