@@ -17,6 +17,7 @@
 #include "Queue.h"
 #include "Message.h"
 #include "MessageManager.h"
+#include "phonebook.h"
 
 #include "linux_utils.h"
 
@@ -46,6 +47,7 @@ void setCOMport();
 void setSampleRate();
 void rs232message();
 void comPortTest();
+void phonebookMenu();
 
 int main() {
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
@@ -140,6 +142,9 @@ int main() {
             }
 			break;
 		}
+		case 4: // Phonebook selected
+			phonebookMenu();
+			break;
         case 0:
             running = false;  // Exit the loop and terminate the program
             printf("Exiting the program. Goodbye!\n");
@@ -217,4 +222,10 @@ void comPortTest() {
     printf("Press Enter to return to the menu...");
     getchar(); // Consume the Enter key left in the input buffer
     getchar(); // Wait for actual user input
+}
+
+// Function to display the phonebook menu
+void phonebookMenu() {
+    Phonebook pb;
+    pb.menu();
 }

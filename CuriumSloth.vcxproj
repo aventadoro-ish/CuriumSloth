@@ -136,6 +136,7 @@
     <ClCompile Include="src\COMPortTest.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\FortuneCookies.cpp" />
+    <ClCompile Include="src\phonebook.cpp" />
     <ClCompile Include="src\Queue.cpp" />
     <ClCompile Include="src\RS232test.cpp" />
     <ClCompile Include="src\soundTest.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="src\COMPort.h" />
     <ClInclude Include="src\COMPortTest.h" />
     <ClInclude Include="src\FortuneCookies.h" />
+    <ClInclude Include="src\phonebook.h" />
     <ClInclude Include="src\Queue.h" />
     <ClInclude Include="src\terminal.h" />
   </ItemGroup>

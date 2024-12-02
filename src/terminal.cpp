@@ -23,6 +23,7 @@ void displayMainMenu() {
     printf("1. Home\n");
     printf("2. Receive\n");
     printf("3. Communication Settings\n");
+    printf("4. Phonebook\n");
     printf("0. Exit\n");
     printf("=======================\n");
     printf("Enter your choice: ");
