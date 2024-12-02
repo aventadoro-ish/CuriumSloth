@@ -15,8 +15,8 @@ using namespace std;
 const int BUFSIZE = 200;  // Buffer size
 
 // Physical ports (adjust as necessary)
-const char* COMPORT_Rx = "COM3";
-const char* COMPORT_Tx = "COM4";
+const char* COMPORT_Rx = "COM4";
+const char* COMPORT_Tx = "COM5";
 
 // COM Port settings
 const COMPortBaud BAUD_RATE = COMPortBaud::COM_BAUD_460800;
