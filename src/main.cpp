@@ -13,6 +13,7 @@
 #include "CmS_Sound.h"
 #include "COMPort.h"
 #include "COMPortTest.h"
+#include "COMPortManager.h"
 #include "RS232test.h"
 #include "Queue.h"
 #include "Message.h"
@@ -28,6 +29,9 @@
 #endif
 
 using namespace std;
+
+std::string txPortName;
+std::string rxPortName;
 
 // Function prototypes for non-terminal logic
 void displayMainMenu();
@@ -47,11 +51,14 @@ void setCOMport();
 void setSampleRate();
 void rs232message();
 void comPortTest();
+void setCOMport();
 void phonebookMenu();
 
 int main() {
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
     bool running = true;
+
+    setCOMport();
 
     while (running) {
         displayMainMenu();  // Show the main menu (Home/Receive/Exit)
@@ -206,22 +213,66 @@ void adjustBitrate() {
 	printf("Adjusting bitrate (placeholder)...\n");
 }
 
+// Function to set COM ports
 void setCOMport() {
-	printf("Setting COM port (placeholder)...\n");
-}   
+    std::vector<std::string> availablePorts;
+
+    // Fetch and display available COM ports for sender
+    cout << "Available COM Ports for Sender:\n";
+    availablePorts = listAvailableCOMPorts();
+    if (availablePorts.empty()) {
+        cerr << "Error: No COM ports detected for Sender.\n";
+        exit(1); // Exit if no COM ports are available
+    }
+
+    for (size_t i = 0; i < availablePorts.size(); ++i) {
+        cout << i + 1 << ". " << availablePorts[i] << "\n";
+    }
+
+    int senderChoice;
+    do {
+        cout << "Select a COM port for Sender (1-" << availablePorts.size() << "): ";
+        cin >> senderChoice;
+    } while (senderChoice < 1 || senderChoice > static_cast<int>(availablePorts.size()));
+
+    txPortName = availablePorts[senderChoice - 1];
+    cout << "\nSender COM Port Selected: " << txPortName << "\n";
+
+    // Remove the selected sender port from the list
+    availablePorts.erase(availablePorts.begin() + (senderChoice - 1));
+
+    // Fetch and display available COM ports for receiver
+    cout << "\nAvailable COM Ports for Receiver:\n";
+    if (availablePorts.empty()) {
+        cerr << "Error: No COM ports detected for Receiver.\n";
+        exit(1); // Exit if no COM ports are available
+    }
+
+    for (size_t i = 0; i < availablePorts.size(); ++i) {
+        cout << i + 1 << ". " << availablePorts[i] << "\n";
+    }
+
+    int receiverChoice;
+    do {
+        cout << "Select a COM port for Receiver (1-" << availablePorts.size() << "): ";
+        cin >> receiverChoice;
+    } while (receiverChoice < 1 || receiverChoice > static_cast<int>(availablePorts.size()));
+
+    rxPortName = availablePorts[receiverChoice - 1];
+    cout << "\nReceiver COM Port Selected: " << rxPortName << "\n";
+}
 
 void setSampleRate() {
 	printf("Setting sample rate (placeholder)...\n");
 }
 
-// Function to test COM ports
+// Test COM Port
 void comPortTest() {
-	testCOMPort("COM3", "COM4");
-
-    // Wait for the user to press Enter
-    printf("Press Enter to return to the menu...");
-    getchar(); // Consume the Enter key left in the input buffer
-    getchar(); // Wait for actual user input
+    if (txPortName.empty() || rxPortName.empty()) {
+        std::cerr << "COM ports not set.\n";
+        return;
+    }
+    testCOMPort(txPortName.c_str(), rxPortName.c_str());
 }
 
 // Function to display the phonebook menu

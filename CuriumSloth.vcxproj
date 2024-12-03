@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="src\CmS_Sound.cpp" />
     <ClCompile Include="src\COMPort.cpp" />
+    <ClCompile Include="src\COMPortManager.cpp" />
     <ClCompile Include="src\COMPortTest.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\FortuneCookies.cpp" />
@@ -145,6 +146,7 @@
   <ItemGroup>
     <ClInclude Include="src\CmS_Sound.h" />
     <ClInclude Include="src\COMPort.h" />
+    <ClInclude Include="src\COMPortManager.h" />
     <ClInclude Include="src\COMPortTest.h" />
     <ClInclude Include="src\FortuneCookies.h" />
     <ClInclude Include="src\phonebook.h" />

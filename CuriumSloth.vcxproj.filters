@@ -11,6 +11,7 @@
     <ClCompile Include="src\FortuneCookies.cpp" />
     <ClCompile Include="src\COMPortTest.cpp" />
     <ClCompile Include="src\phonebook.cpp" />
+    <ClCompile Include="src\COMPortManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CmS_Sound.h" />
@@ -20,5 +21,6 @@
     <ClInclude Include="src\FortuneCookies.h" />
     <ClInclude Include="src\COMPortTest.h" />
     <ClInclude Include="src\phonebook.h" />
+    <ClInclude Include="src\COMPortManager.h" />
   </ItemGroup>
 </Project>
