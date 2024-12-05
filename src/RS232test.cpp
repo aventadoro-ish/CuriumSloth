@@ -14,9 +14,9 @@ using namespace std;
 // Constants
 const int BUFSIZE = 200;  // Buffer size
 
-// Physical ports (adjust as necessary)
-const char* COMPORT_Rx = "COM3";
-const char* COMPORT_Tx = "COM4";
+// Externally defined variables for dynamic COM ports
+extern std::string txPortName;
+extern std::string rxPortName;
 
 // COM Port settings
 const COMPortBaud BAUD_RATE = COMPortBaud::COM_BAUD_460800;
@@ -34,7 +34,7 @@ void populateQueue(Queue<T>& quoteQueue) {
     long int* quoteIndices = fquoteIndices(numQuotes);
     int* quoteLengths = fquoteLength(numQuotes, quoteIndices);
 
-   
+
     if (quoteIndices && quoteLengths) {
         srand((unsigned int)time(NULL));  // Seed random number generator
 
@@ -55,6 +55,12 @@ void populateQueue(Queue<T>& quoteQueue) {
 }
 
 int rs232test() {
+    // Ensure COM ports are set
+    if (txPortName.empty() || rxPortName.empty()) {
+        cerr << "Error: COM ports not set. Please set COM ports before testing.\n";
+        return -1;
+    }
+
     // Initialize the queue
     Queue<string> quoteQueue;
     quoteQueue.inItQueue();
@@ -65,19 +71,22 @@ int rs232test() {
     COMPort comRx(BAUD_RATE, PARITY, STOP_BITS);
     COMPort comTx(BAUD_RATE, PARITY, STOP_BITS);
 
-    if (comRx.openPort((char*)COMPORT_Rx) != CPErrorCode::SUCCESS) {
-        cerr << "Failed to open Rx port: " << COMPORT_Rx << endl;
+    if (comRx.openPort((char*)rxPortName.c_str()) != CPErrorCode::SUCCESS) {
+        cerr << "Failed to open Rx port: " << rxPortName << endl;
         return -1;
     }
 
-    if (comTx.openPort((char*)COMPORT_Tx) != CPErrorCode::SUCCESS) {
-        cerr << "Failed to open Tx port: " << COMPORT_Tx << endl;
+    if (comTx.openPort((char*)txPortName.c_str()) != CPErrorCode::SUCCESS) {
+        cerr << "Failed to open Tx port: " << txPortName << endl;
+        comRx.closePort();
         return -1;
     }
 
     // Dequeue a quote for transmission
     if (quoteQueue.isQueueEmpty()) {
-        printf("No quotes available to send!\n");
+        cerr << "No quotes available to send!\n";
+        comRx.closePort();
+        comTx.closePort();
         return -1;
     }
     Node<string>* quoteNode = quoteQueue.deQueue();
@@ -85,18 +94,18 @@ int rs232test() {
     delete quoteNode;
 
     // Transmit the message
-    printf("\nSending Message: \n%s\n", msgOut.c_str());
+    cout << "\nSending Message:\n" << msgOut << "\n";
     if (comTx.sendMessage((void*)msgOut.c_str(), msgOut.length() + 1) != CPErrorCode::SUCCESS) {
-        cerr << "Failed to send message." << endl;
+        cerr << "Failed to send message.\n";
     }
 
     // Receive a response (if any)
     char msgIn[BUFSIZE] = { 0 };
-    if (comRx.receiveMessage((void*)msgIn, BUFSIZE) == CPErrorCode::SUCCESS) {
-        printf("\nMessage Received: \n%s\n", msgIn);
+    if (comRx.receiveMessage((void*)msgIn, BUFSIZE, 0, 5000) == CPErrorCode::SUCCESS) {
+        cout << "\nMessage Received:\n" << msgIn << "\n";
     }
     else {
-        cerr << "Failed to receive message." << endl;
+        cerr << "Failed to receive message.\n";
     }
 
     // Clean up

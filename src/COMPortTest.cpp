@@ -60,7 +60,7 @@ void testCOMPort(const char* txPortName, const char* rxPortName) {
     }
 
     // Allow some time for the message to reach RX
-    Sleep(100);
+    Sleep(50);
     //std::this_thread::sleep_for(chrono::milliseconds(100));
 
     // Check for data in RX input buffer
