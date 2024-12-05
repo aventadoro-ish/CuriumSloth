@@ -138,6 +138,8 @@ CPErrorCode COMPort::closePort() {
     close(fd);
 #endif
 
+    hCom = INVALID_HANDLE_VALUE; // Reset handle after successful close
+    is_port_open = false;
     return CPErrorCode::SUCCESS;
 }
 

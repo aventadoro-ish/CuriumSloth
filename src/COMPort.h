@@ -52,6 +52,7 @@ class COMPort {
     COMPortBaud baud = COMPortBaud::COM_BAUD_9600;
     CPParity parity = CPParity::NONE;
     int stop_bits = 1;
+    bool is_port_open; 
 
     std::chrono::steady_clock::time_point last_transmission_end;
 

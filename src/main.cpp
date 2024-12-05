@@ -13,12 +13,12 @@
 #include "CmS_Sound.h"
 #include "COMPort.h"
 #include "COMPortTest.h"
+#include "COMPortManager.h"
 #include "RS232test.h"
 #include "Queue.h"
 #include "Message.h"
 #include "MessageManager.h"
-#include "tests.h"
-#include "utils.h"
+#include "phonebook.h"
 
 #ifdef _WIN32
 
@@ -27,6 +27,9 @@
 #endif
 
 using namespace std;
+
+std::string txPortName; // Transmitter port set at startup
+std::string rxPortName; // Receiver port set at startup
 
 // Function prototypes for non-terminal logic
 void displayMainMenu();
@@ -42,17 +45,16 @@ void checkIncomingMessages();
 void downloadMessages();
 void manageDownloads();
 void adjustBitrate();
-void setCOMport();
 void setSampleRate();
 void rs232message();
 void comPortTest();
+void phonebookMenu();
 
 int main() {
-    devTesting();
-    return 0;
-
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
     bool running = true;
+
+    setCOMport();
 
     while (running) {
         displayMainMenu();  // Show the main menu (Home/Receive/Exit)
@@ -78,12 +80,12 @@ int main() {
                 case 4:
                     displayQueue();  // Display Queued Messages
                     break;
-				case 5:
-					rs232message(); // Test Function for RS232 communication
-					break;
+                case 5:
+                    rs232message(); // Test Function for RS232 communication
+                    break;
                 case 6:
-					comPortTest(); // Test Function for COM Port
-					break;
+                    comPortTest(); // Test Function for COM Port
+                    break;
                 case 0:
                     inHomeMenu = false;  // Go back to the main menu
                     break;
@@ -126,10 +128,10 @@ int main() {
 
                 switch (communicationChoice) {
                 case 1:
-					adjustBitrate();  // Adjust Bitrate
+                    adjustBitrate();  // Adjust Bitrate
                     break;
                 case 2:
-					setCOMport();  // Set COM Port
+                    setCOMport();  // Set COM Port
                     break;
                 case 3:
                     setSampleRate();  // Set Sample Rate
@@ -141,8 +143,11 @@ int main() {
                     printf("Invalid choice. Please try again.\n");
                 }
             }
-			break;
-		}
+            break;
+        }
+        case 4: // Phonebook selected
+            phonebookMenu();
+            break;
         case 0:
             running = false;  // Exit the loop and terminate the program
             printf("Exiting the program. Goodbye!\n");
@@ -178,7 +183,7 @@ void displayQueue() {
 
 // Wrapper function for RS232 communication testing
 void rs232message() {
-	rs232test(); // Test Function for RS232 communication
+    rs232test(); // Test Function for RS232 communication
 }
 
 // Placeholder for communication settings function
@@ -201,23 +206,26 @@ void manageDownloads() {
 }
 
 void adjustBitrate() {
-	printf("Adjusting bitrate (placeholder)...\n");
+    printf("Adjusting bitrate (placeholder)...\n");
 }
-
-void setCOMport() {
-	printf("Setting COM port (placeholder)...\n");
-}   
 
 void setSampleRate() {
-	printf("Setting sample rate (placeholder)...\n");
+    printf("Setting sample rate (placeholder)...\n");
 }
 
-// Function to test COM ports
+// Test COM Port
 void comPortTest() {
-	testCOMPort("COM3", "COM4");
+    if (txPortName.empty() || rxPortName.empty()) {
+        std::cerr << "COM ports not set.\n";
+        return;
+    }
+    testCOMPort(txPortName.c_str(), rxPortName.c_str());
+}
 
-    // Wait for the user to press Enter
-    printf("Press Enter to return to the menu...");
-    getchar(); // Consume the Enter key left in the input buffer
-    getchar(); // Wait for actual user input
+// Function to display the phonebook menu
+void phonebookMenu() {
+    setCOMport();
+
+    Phonebook pb;
+    pb.menu();
 }
