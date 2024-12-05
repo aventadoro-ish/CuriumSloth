@@ -384,7 +384,8 @@ int Message::preparePayload() {
     memcpy(bufO, bufC, sizeO);
 
     if (sizeO != header.decompressedSize) {
-        cerr << "WARNING! Message::preparePayload() -> sizeO != header.decompressedSize" << endl;
+        cerr << "WARNING! Message::preparePayload() -> sizeO != header.decompressedSize" << endl
+             << "\t sizeO=" << sizeO << " header.decompressedSize =" << header.decompressedSize << endl;
     }
 
     // cout << "Payload message" << endl;
@@ -417,7 +418,7 @@ int Message::addData(void* buf, size_t size, bool encode) {
     bufA = (void*)malloc(size);
     sizeA = size;
     if (!bufA) {
-        cerr << "ERROR! Unable to allocate memory for data buffer." << endl;
+        cerr << "Message::addData() ERROR! Unable to allocate memory for data buffer." << endl;
         return -1;
     }
 
@@ -473,6 +474,7 @@ void Message::printHeader() {
     case MSGCompression::NONE:      cout << "none";         break;
     case MSGCompression::HUFFMAN:   cout << "Huffman";      break;
     case MSGCompression::RLE:       cout << "RLE";          break;
+    case MSGCompression::ADPCM:     cout << "ADPCM";        break;
     default:                        cout << "unsupported";  break;
     }
     cout << endl;

@@ -1,6 +1,6 @@
 #include "CmS_Sound.h"
 
-
+#include <chrono>
 
 #ifdef _WIN32
 #include <mmsystem.h>					
@@ -39,12 +39,19 @@ using namespace std;
 AudioRecorder::AudioRecorder(
 	uint32_t samplesPerSecond,
 	uint16_t bitsPerSample,
-	uint16_t numChannels) {
+	uint16_t numChannels,
+	bool isRollingAudio,
+	MessageManger* msgMng) {
+	// void (*sendDataHandle)(void*, size_t)) {
 
 	recSamplesPerSencod = samplesPerSecond;
 	recBitsPerSample = bitsPerSample;
 	recNumCh = numChannels;
 
+	isRollingRecording = isRollingAudio;
+	msgManager = msgMng;
+
+	// this->sendDataHandle = sendDataHandle;
 }
 
 AudioRecorder::~AudioRecorder() {
@@ -120,6 +127,7 @@ int AudioRecorder::prepareBuffer(int seconds) {
 	// recBufSize = seconds * recSamplesPerSencod * (recBitsPerSample / 8) * recNumCh;
 	
 	recBuf = (AudioBufT*)malloc(recBufSize);
+	// ZeroMemory(recBuf, recBufSize);
 	
 #elif __linux__
 	long unsigned int bytesPerSample = recBitsPerSample / 8;
@@ -177,9 +185,79 @@ int AudioRecorder::waitOnHeader(WAVEHDR* wh, char cDit) {
 	}
 }
 
+int AudioRecorder::waitOnHeaderRolling(WAVEHDR* wh, char cDit) {
+	auto start = chrono::steady_clock::now();
+	void* sentPtr = recBuf;
+	DWORD numBytesRecordedLast = 0;
+
+	long	lTime = 0;
+	// wait for whatever is being played, to finish. Quit after 10 seconds.
+	for (;;) {
+		// if recording finished, retrun
+		if (wh->dwFlags & WHDR_DONE) return(0);
+
+        auto end = chrono::steady_clock::now();
+        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+		// don't send data less than 500ms apart
+		// if (elapsedMs < 2000) {
+		// 	msgManager->tick();
+		// 	// sendDataHandle(nullptr, 0);	// calls tick() to transmit pending data
+		// 	continue;
+		// }
+		// 500ms has passed
 
 
+		DWORD numNewBytes = wh->dwBytesRecorded - numBytesRecordedLast;
+		if (numNewBytes < (msgManager->getMaxMessageSize() * 4) - sizeof(ADPCMHeader)) { // assuming 1/4 compression
+			msgManager->tick();
+			continue;
+		}
+		start = chrono::steady_clock::now(); // update the counter
 
+		cout << "AudioRecorder::waitOnHeaderRolling() wh->dwBytesRecorded=" << wh->dwBytesRecorded << endl; 
+		cout << "AudioRecorder::waitOnHeaderRolling() numNewBytes        =" << numNewBytes << endl; 
+		numBytesRecordedLast += numNewBytes;
+		
+		// // calculate the number of bytes that were recorded up to present moment
+		// size_t sizeEstimate = elapsedMs * recSamplesPerSencod * recBitsPerSample / 8 * recNumCh / 1000;
+		
+		// send data
+		msgManager->transmitDataRollingCallback(sentPtr, numNewBytes);
+		// sendDataHandle(sentPtr, sizeEstimate);
+
+		sentPtr = (void*)((size_t)sentPtr + numNewBytes);
+
+		// idle for a bit so as to free CPU
+		// Sleep(100L);
+		// lTime += 100;
+		// if (lTime >= MAX_RECORDING_LEN) {
+		// 	cerr << "waitOnHeader(...) timed out!" << endl;
+		// 	return(-1);  // timeout period
+		// }
+
+		if (cDit) cout << cDit;
+	}
+}
+
+int AudioRecorder::waitOnHeaderRollingReplay(WAVEHDR* wh, char cDit) {
+	long	lTime = 0;
+	// wait for whatever is being played, to finish. Quit after 10 seconds.
+	for (; ; ) {
+		if (wh->dwFlags & WHDR_DONE) return(0);
+		
+		msgManager->tick();
+
+		// idle for a bit so as to free CPU
+		Sleep(10L);
+		lTime += 10;
+		if (lTime >= MAX_RECORDING_LEN) {
+			cerr << "waitOnHeader(...) timed out!" << endl;
+			return(-1);  // timeout period
+		}
+		if (cDit) cout << cDit;
+	}
+}
 
 int AudioRecorder::initializeRecording() {
 	MMRESULT rc;
@@ -226,8 +304,13 @@ int AudioRecorder::recordBuffer() {
 	// Record the buffer. This is NON-blocking.
 	mmErr = waveInStart(hWaveIn);
 
-	// wait for completion
-	rc = waitOnHeader(&waveHeaderIn);
+	if (isRollingRecording) {
+		rc = waitOnHeaderRolling(&waveHeaderIn);
+	} else {
+		// wait for completion
+		rc = waitOnHeader(&waveHeaderIn);
+	}
+
 	// stop input
 	waveInStop(hWaveIn);
 	return(rc);
@@ -297,8 +380,13 @@ int AudioRecorder::playBuffer() {
         return -1;
     }
 
-	// wait for completion
-	rc = waitOnHeader(&waveHeaderOut, 0);
+	if (isRollingRecording) {
+		rc = waitOnHeaderRollingReplay(&waveHeaderOut, 0);
+	} else {
+		// wait for completion
+		rc = waitOnHeader(&waveHeaderOut, 0);
+	}
+
 	// give back resources
 	waveOutUnprepareHeader(hWaveOut, &waveHeaderOut, sizeof(WAVEHDR));
 	return(rc);

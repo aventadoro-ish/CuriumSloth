@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wave.h"
+#include "MessageManager.h"
 
 #ifdef _WIN32
 #include <windows.h>					// Contains WAVEFORMATEX structure
@@ -60,6 +61,13 @@ private:
 	uint32_t recBufSize = 0;
 
 
+	// rolling recording handling
+	bool isRollingRecording = false;
+	MessageManger* msgManager = nullptr;
+	// void (*sendDataHandle)(void*, size_t) = nullptr;
+
+	AudioBufT* sentPtr = nullptr;
+
 
 #ifdef _WIN32
 	/// <summary>
@@ -74,6 +82,12 @@ private:
 	/// <param name="cDit">char to put to console while waiting (0 for not printing)</param>
 	/// <returns> 0 if success, -1 if timeout</returns>
 	int waitOnHeader(WAVEHDR* wh, char cDit = 0);
+
+	int waitOnHeaderRolling(WAVEHDR* wh, char cDit = 0);
+
+	int waitOnHeaderRollingReplay(WAVEHDR* wh, char cDit = 0);
+
+
 #elif __linux__
 	int prepareStream(snd_pcm_t** pcm_handle, snd_pcm_stream_t stream, snd_pcm_hw_params_t** hwparams, char* pcm_name);
 	long readbuf(snd_pcm_t *handle, char *buf, long len, size_t *frames, size_t *max);
@@ -131,10 +145,19 @@ private:
 
 public:
 
+	/// @brief Constructor for AudioRecording class
+	/// @param samplesPerSecond 
+	/// @param bitsPerSample 
+	/// @param numChannels 
+	/// @param isRollingAudio do you want to send data as you go?
+	/// @param sendData pointer to the function that sends data as it is being recorded
 	AudioRecorder(
 		uint32_t samplesPerSecond = 8000,
 		uint16_t bitsPerSample = 16,
-		uint16_t numChannels = 1);
+		uint16_t numChannels = 1,
+		bool isRollingAudio = false,
+		MessageManger* msgMng = nullptr);
+		// void (*sendDataHandle)(void*, size_t) = nullptr);
 	~AudioRecorder();
 
 	/// <summary>

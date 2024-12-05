@@ -40,6 +40,7 @@ class MessageManger {
 
     std::unordered_set<unsigned long int> received_ids;
     QueueProper<Message> receive_queue;
+    QueueProper<Message> to_process_queue;
 
     // awaiting confirmation (retransmit based on timeout)
     // simpler scheme with 1 active message at a time was used instead
@@ -60,10 +61,14 @@ class MessageManger {
     void transmitMessage();
     void retransmitMessage();
 
+    void processRollingAudioRx();
+
     bool hasMessageBeenReceived(unsigned long int newMsgID);
     
 
 public:
+    bool isRollingReceive = false;
+
     MessageManger(int senderID, size_t max_msg_size = 0x3fff);
     ~MessageManger();
 
@@ -85,6 +90,13 @@ public:
                      MSGEncryption encryption = MSGEncryption::NONE);
 
 
+    /// @brief Transmits audio data callback
+    /// assumes ADPCM compression, no encryption
+    /// @param buf 
+    /// @param bufLen if 0, only tick() is called
+    /// @return 
+    int transmitDataRollingCallback(void* buf, size_t bufLen);
+
 
     /// @brief Needs to be called in the main loop
     /// @return 0 if all queues are empty, -1 if error, 1 if queues are not empty (no errors)
@@ -104,6 +116,10 @@ public:
     /// @brief Copies a waveHeader into a member variable
     /// @param waveHeader 
     void setWaveHeader(WAVEHeader* waveHeader);
+
+    size_t getMaxMessageSize() {
+        return max_message_size;
+    }
 
 
 };

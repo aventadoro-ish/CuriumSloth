@@ -224,10 +224,8 @@ void ADPCMCompressionTest() {
     return;
 }
 
-
-
-void devTesting() {
-    char ch;
+void ADPCMTxAndRxTest() {
+        char ch;
     cout << "Enter t for transmit, r for receive side: ";
     cin >> ch;
 
@@ -249,7 +247,7 @@ void devTesting() {
 
         AudioRecorder ar = AudioRecorder(8000, 16, 1);
         cout << "Record audio" << endl;
-        ar.recordAudio(5);
+        ar.recordAudio(25);
         cout << "Confirm audio" << endl;
         ar.replayAudio();
         cout << "Total recording size is: " << hex << ar.getBufferSize() << dec << endl;
@@ -292,6 +290,107 @@ void devTesting() {
         rx.openPort("COM8");
         MessageManger rxMan = MessageManger(1, maxMes);
         rxMan.setCOMPort(&rx);
+        
+        cout << "Port is open. Waiting for input" << endl;
+
+
+        for (;;) {
+            if (kbhit()) {
+                ch = _getch();
+                // cin >> ch;
+
+                if (ch == 'r') {
+                    rxMan.replayAudio();
+                } else {
+                    rx.closePort();
+                    cout << "exiting" << endl;
+                    break;
+                }
+
+            }
+
+            rxMan.tick();
+
+        }
+
+    } else {
+
+    }
+}
+
+
+void rollingTxWrapper(MessageManger* mng) {
+    
+}
+
+void devTesting() {
+    // ADPCMTxAndRxTest(); // last 
+    // return;
+
+    char ch;
+    cout << "Enter t for transmit, r for receive side: ";
+    cin >> ch;
+
+    // COMPortBaud baud = COMPortBaud::COM_BAUD_460800; // works
+    COMPortBaud baud = COMPortBaud::COM_BAUD_MAX ; //
+    size_t maxMes = 0x800;
+
+    if (ch == 't') {
+        cout << "Transmit side: Openning COM3" << endl;
+
+        // cout << sizeof(MSGHeader) - sizeof(short) << endl;
+        COMPort tx = COMPort(baud, CPParity::EVEN, 1);
+        tx.openPort("COM3");
+        MessageManger txMan = MessageManger(0, maxMes);
+        txMan.setCOMPort(&tx);
+
+        cout << "Port is open" << endl;
+    
+
+        AudioRecorder ar = AudioRecorder(8000, 16, 1, true, &txMan);
+        WAVEHeader hdr = ar.getWaveHeader();
+        txMan.setWaveHeader(&hdr);
+
+
+        cout << "Record audio" << endl;
+        ar.recordAudio(10);     // start rolling recording
+        cout << "Total recording size is: " << hex << ar.getBufferSize() << dec << endl;
+
+        auto start = chrono::steady_clock::now();
+
+        for (;;) {
+            if (kbhit()) {
+                tx.closePort();
+                cout << "exiting" << endl;
+                break;
+            }
+
+            if (!txMan.tick()) {
+                break;
+            }
+        
+        }
+
+        auto end = chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+        cout << endl << endl << endl << dec;
+        cout << "Transmitted " << ar.getBufferSize() / 1024 << " kB (" 
+             << ar.getBufferSize() / 1024 / 4  << " kB after compression) in " 
+             << maxMes << " chunks in " << elapsed / 1000.0 << " seconds" << endl
+             << "Effective average transmission rate = " 
+             << 1000.0 * (double)ar.getBufferSize() / 1024.0 / elapsed 
+             << " kB/s" << endl;
+
+        
+    } else if (ch == 'r') {
+        cout << "Receive side: Openning COM8" << endl;
+
+        COMPort rx = COMPort(baud, CPParity::EVEN, 1);
+        rx.openPort("COM8");
+        MessageManger rxMan = MessageManger(1, maxMes);
+        rxMan.setCOMPort(&rx);
+        rxMan.isRollingReceive = true;
         
         cout << "Port is open. Waiting for input" << endl;
 
