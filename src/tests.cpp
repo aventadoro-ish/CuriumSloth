@@ -12,8 +12,6 @@
 #include "CmS_Sound.h"
 #include "utils.h"
 
-#pragma message("Hereeee")
-
 
 using namespace std;
 

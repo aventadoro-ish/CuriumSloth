@@ -21,7 +21,7 @@
 #include "phonebook.h"
 
 #ifdef _WIN32
-
+#define UNICODE     // needed for Windows COM ports for some reason
 #include <conio.h>
 
 #endif

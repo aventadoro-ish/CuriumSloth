@@ -6,6 +6,7 @@
 
 #include "COMPortManager.h"
 #include <iostream>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -31,7 +32,8 @@ std::vector<std::string> listAvailableCOMPorts() {
         std::wstring widePortName = stringToWString(portName);
 
         // Query the COM port
-        if (QueryDosDevice(widePortName.c_str(), targetPath, sizeof(targetPath) / sizeof(wchar_t))) {
+        // TODO: Gobind, please verify the casts
+        if (QueryDosDeviceW(widePortName.c_str(), targetPath, sizeof(targetPath) / sizeof(wchar_t))) {
             ports.push_back(portName); // Use narrow string for display/storage
         }
     }
