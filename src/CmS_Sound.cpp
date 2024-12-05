@@ -33,7 +33,7 @@
 
 using namespace std;
 
-
+// #define AUDIO_ENABLE_DEBUG
 
 
 AudioRecorder::AudioRecorder(
@@ -44,6 +44,7 @@ AudioRecorder::AudioRecorder(
 	MessageManger* msgMng) {
 	// void (*sendDataHandle)(void*, size_t)) {
 
+	recBuf = nullptr;
 	recSamplesPerSencod = samplesPerSecond;
 	recBitsPerSample = bitsPerSample;
 	recNumCh = numChannels;
@@ -57,6 +58,21 @@ AudioRecorder::AudioRecorder(
 AudioRecorder::~AudioRecorder() {
 	clearBuffer();
 }
+
+void AudioRecorder::setRollingState(bool isRolling, MessageManger* man) {
+	if (isRolling) {
+		if (man == nullptr) {
+			cerr << "WARNING! Can't set live recording ON without providing a MessageManager instance" << endl;
+			isRollingRecording = false;
+			return;
+		}
+		msgManager = man;
+		isRollingRecording = true;
+		return;
+	}	
+	isRollingRecording = false;
+}
+
 
 int AudioRecorder::recordAudio(uint32_t seconds) {
 	prepareBuffer(seconds);
@@ -72,8 +88,6 @@ int AudioRecorder::replayAudio() {
 		cerr << "ERROR! Unable to replay recBuf (nullptr)" << endl;
 		return -1;
 	}
-
-	cout << " replayAudio()" << endl;
 
 	initializePlayback();
 	playBuffer();
@@ -111,8 +125,9 @@ WAVEHeader AudioRecorder::getWaveHeader() {
 
 int AudioRecorder::prepareBuffer(int seconds) {
 	if (recBuf != nullptr) {
+		// free(recBuf);
 		cerr << "ERROR! Trying to rewrite recBuf!" << endl;
-		return -1;
+		// return -1;
 	}
 
 #ifdef _WIN32
@@ -186,18 +201,28 @@ int AudioRecorder::waitOnHeader(WAVEHDR* wh, char cDit) {
 }
 
 int AudioRecorder::waitOnHeaderRolling(WAVEHDR* wh, char cDit) {
-	auto start = chrono::steady_clock::now();
+#ifdef AUDIO_ENABLE_DEBUG
+	cout << "AudioRecorder::waitOnHeaderRolling() is called" << endl;
+#endif // AUDIO_ENABLE_DEBUG
 	void* sentPtr = recBuf;
 	DWORD numBytesRecordedLast = 0;
-
 	long	lTime = 0;
 	// wait for whatever is being played, to finish. Quit after 10 seconds.
 	for (;;) {
 		// if recording finished, retrun
-		if (wh->dwFlags & WHDR_DONE) return(0);
-
-        auto end = chrono::steady_clock::now();
-        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+		if (wh->dwFlags & WHDR_DONE) {
+#ifdef AUDIO_ENABLE_DEBUG
+			cout << "AudioRecorder::waitOnHeaderRolling() is finished" << endl;
+#endif // AUDIO_ENABLE_DEBUG
+			// send the rest of the data and return
+			// TODO: fix this issue \
+			// sending last bit of data causes a crash
+			// DWORD numNewBytes = wh->dwBytesRecorded - numBytesRecordedLast;
+			// numBytesRecordedLast += numNewBytes;
+			// msgManager->transmitDataRollingCallback(sentPtr, numNewBytes);
+			// sentPtr = (void*)((size_t)sentPtr + numNewBytes);
+			return(0);
+		}
 
 		// don't send data less than 500ms apart
 		// if (elapsedMs < 2000) {
@@ -206,17 +231,23 @@ int AudioRecorder::waitOnHeaderRolling(WAVEHDR* wh, char cDit) {
 		// 	continue;
 		// }
 		// 500ms has passed
-
+#ifdef AUDIO_ENABLE_DEBUG
+		cout << "AudioRecorder::waitOnHeaderRolling() " << endl;
+#endif // AUDIO_ENABLE_DEBUG
 
 		DWORD numNewBytes = wh->dwBytesRecorded - numBytesRecordedLast;
 		if (numNewBytes < (msgManager->getMaxMessageSize() * 4) - sizeof(ADPCMHeader)) { // assuming 1/4 compression
+#ifdef AUDIO_ENABLE_DEBUG
+			cout << "AudioRecorder::waitOnHeaderRolling() tick()" << endl;
+#endif // AUDIO_ENABLE_DEBUG
 			msgManager->tick();
 			continue;
 		}
-		start = chrono::steady_clock::now(); // update the counter
 
+#ifdef AUDIO_ENABLE_DEBUG
 		cout << "AudioRecorder::waitOnHeaderRolling() wh->dwBytesRecorded=" << wh->dwBytesRecorded << endl; 
 		cout << "AudioRecorder::waitOnHeaderRolling() numNewBytes        =" << numNewBytes << endl; 
+#endif // AUDIO_ENABLE_DEBUG
 		numBytesRecordedLast += numNewBytes;
 		
 		// // calculate the number of bytes that were recorded up to present moment
@@ -261,6 +292,7 @@ int AudioRecorder::waitOnHeaderRollingReplay(WAVEHDR* wh, char cDit) {
 
 int AudioRecorder::initializeRecording() {
 	MMRESULT rc;
+	cout << "AudioRecorder::initializeRecording() is called" << endl;
 
 	// set up the format structure, needed for recording.
 	setupFormat();
@@ -292,6 +324,7 @@ int AudioRecorder::recordBuffer() {
 	//static  WAVEHDR	WaveHeader;			/* WAVEHDR structure for this buffer */
 	MMRESULT	mmErr;
 	int		rc;
+	cout << "AudioRecorder::recordBuffer() is called" << endl;
 
 	// stop previous recording (just in case)
 	waveInReset(hWaveIn);   // is this good?
@@ -318,6 +351,8 @@ int AudioRecorder::recordBuffer() {
 }
 
 void AudioRecorder::closeRecordring() {
+	cout << "AudioRecorder::closeRecordring() is called" << endl;
+
 	waveInUnprepareHeader(hWaveIn, &waveHeaderIn, sizeof(WAVEHDR));
 	// close the playback device
 	waveInClose(hWaveIn);

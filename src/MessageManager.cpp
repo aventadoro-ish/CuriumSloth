@@ -369,8 +369,11 @@ void MessageManger::processRollingAudioRx() {
     //     return;
     // }
 
-    cout << "Total payload size is 0x" << hex << total_payload_size << dec << endl; 
+    cout << "MessageManger::processRollingAudioRx() Total audio size is 0x" << hex << total_payload_size << dec << endl; 
     void* buf = malloc(total_payload_size);
+    if (!buf) {
+        cerr << "ERROR! unable to allocate memort for rolling replay" << endl;
+    }
     
 
     size_t idx = 0;
@@ -381,7 +384,7 @@ void MessageManger::processRollingAudioRx() {
         receive_queue.push(msg);
         idx += msg->getMessageSize();
     }
-    
+    cout << "Replaying rolling audio" << endl;
     AudioRecorder arp = AudioRecorder(8000, 16, 1, true, this);
     arp.setBuffer(buf, total_payload_size);
     arp.replayAudio();

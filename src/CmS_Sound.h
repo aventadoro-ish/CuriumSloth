@@ -227,6 +227,8 @@ public:
 	WAVEHeader getWaveHeader();
 
 
+	void setRollingState(bool isRolling, MessageManger* man = nullptr);
+
 };
 
 

@@ -205,6 +205,7 @@ int Message::prepareOutput() {
     }
 
     if (bufO != nullptr) {
+        printHeader();
         cerr << "WARNING! Overriding bufO" << endl;
         return -1;
     }
