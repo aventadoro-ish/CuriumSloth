@@ -82,6 +82,26 @@ void AudioRecorder::clearBuffer() {
 	}
 }
 
+WAVEHeader AudioRecorder::getWaveHeader() {
+	WAVEHeader hdr;
+
+	// according to wave.h
+	// 4 + (8 + SubChunk1Size) + (8 + SubChunk2Size)
+	// where SubChunk1Size = 16, and SubChunk2Size = the number of bytes in the data
+	hdr.chunkSize = 4 + (8 + 16) + (8 + recBufSize);
+
+	hdr.audioFormat = 1;
+	hdr.numChannels = recNumCh;
+	hdr.sampleRate = recSamplesPerSencod;
+	hdr.byteRate = recSamplesPerSencod * recNumCh * recBitsPerSample / 8;
+	hdr.blockAlign = recNumCh * recBitsPerSample / 8;
+	hdr.bitsPerSample = recBitsPerSample;
+
+	hdr.subchunk2Size = recBufSize;
+
+	return hdr;
+}
+
 int AudioRecorder::prepareBuffer(int seconds) {
 	if (recBuf != nullptr) {
 		cerr << "ERROR! Trying to rewrite recBuf!" << endl;

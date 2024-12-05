@@ -8,6 +8,7 @@
 
 #pragma once
 #include <stdio.h>	
+#include "adpcm.h"
 
 
 enum class MSGType : unsigned short {
@@ -25,12 +26,14 @@ enum class MSGEncryption : unsigned short {
 enum class MSGCompression : unsigned short {
     NONE,
     HUFFMAN,
-    RLE
+    RLE,
+    ADPCM
 };
 
 enum class MSGSystemMessages {
     ACK,
-    NACK
+    NACK,
+    WAVEHEADER
 };
 
 
@@ -88,6 +91,8 @@ class Message {
     void* bufO;         // Output message buffer (encoded with header and footer)
     size_t sizeO;       // Output message buffer size
 
+    WAVEHeader* waveHeader;
+
     MSGHeader header;
 
     char* encryptionKey;
@@ -102,6 +107,11 @@ class Message {
 
     int encryptMessage();
     int compressMessage();
+
+    // performs compression with type NONE
+    void compressNone();
+    void compressADPCM();
+
     int prepareOutput();
 
     int getHeader();
@@ -147,6 +157,10 @@ public:
     /// (decompressed, decrypted, and stripped of header and footer)
     /// @return number of bytes or 0 if failed
     size_t getMessageSize();
+
+    /// @brief Provide WaveHeader data for audio compression and decompression
+    /// @param hdr 
+    void setWaveHeader(WAVEHeader hdr);
 
 
     void printHeader();

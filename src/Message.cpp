@@ -32,6 +32,8 @@ Message::Message() {
   encryptionKey = nullptr;
   isEncode = true;
 
+  waveHeader = nullptr;
+
   header = MSGHeader();
 }
 
@@ -41,6 +43,7 @@ Message::~Message() {
     if (bufC != nullptr) { free(bufC); }
     if (bufO != nullptr) { free(bufO); }
     if (encryptionKey != nullptr) { free(encryptionKey); }
+    if (waveHeader != nullptr) { free(waveHeader); }
 
 }
 
@@ -117,9 +120,7 @@ int Message::compressMessage() {
 
     switch (header.compression) {
     case MSGCompression::NONE:
-        bufC = (void*)malloc(sizeB);
-        sizeC = sizeB;
-        memcpy(bufC, bufB, sizeC);
+        compressNone();
         break;
     case MSGCompression::RLE: {
         bufC = (void*)malloc(sizeB);
@@ -135,6 +136,10 @@ int Message::compressMessage() {
         // printHeader();
         break;
     }
+    case MSGCompression::ADPCM: {
+        compressADPCM();
+        break;
+    }
     default:
         // TODO: Add more compression standards support
         cerr << "WARNING! Compression is not supported";
@@ -147,6 +152,50 @@ int Message::compressMessage() {
     sizeB = 0;
     
     return 0;
+}
+
+void Message::compressNone() {
+    bufC = (void*)malloc(sizeB);
+    sizeC = sizeB;
+    memcpy(bufC, bufB, sizeC);
+}
+
+void Message::compressADPCM() {
+    if (waveHeader == nullptr) {
+        cerr << "WARNING! Message::compressMessage() - defaulting from ADCPM to NONE" << endl;
+        compressNone();
+        return;
+    }
+
+    sizeC = ADPCMDataSize(*waveHeader) + sizeof(ADPCMHeader);
+
+#ifdef MESSAGE_DEBUG_PRINTS
+    cout << "Message::compressADPCM() expected size to allocate " << sizeC << endl;
+#endif // MESSAGE_DEBUG_PRINTS
+
+    bufC = (void*)malloc(sizeC);
+    ADPCMHeader adp_header = ADPCMHeader();
+
+#ifdef MESSAGE_DEBUG_PRINTS
+    cout << "Message::compressADPCM() allocated. compressing " << sizeC << endl;
+    cout << "\t size of data in header is " << waveHeader->subchunk2Size << endl;
+    cout << "\t size of data in buffer is " << sizeB << endl;
+#endif // MESSAGE_DEBUG_PRINTS
+
+    ADPCMCompress(bufB, (void*)((size_t)bufC + sizeof(ADPCMHeader)), *waveHeader, adp_header);
+    
+#ifdef MESSAGE_DEBUG_PRINTS
+    cout << "Message::compressADPCM() copying wave header " << sizeC << endl;
+    cout << "\t isCorrectHeader() ";
+#endif // MESSAGE_DEBUG_PRINTS
+
+    memcpy(bufC, &adp_header, sizeof(ADPCMHeader));
+
+    
+#ifdef MESSAGE_DEBUG_PRINTS
+    cout << "Message::compressADPCM() done " << sizeC << endl;
+#endif // MESSAGE_DEBUG_PRINTS
+
 }
 
 int Message::prepareOutput() {
@@ -247,6 +296,17 @@ int Message::decompressMessage() {
 
         // cout << "Compressed message: ";
         // for (int i = 0; i < sizeB; i++) { cout << ((char*)bufB)[i]; } cout << endl;
+
+        break;
+    }
+    case MSGCompression::ADPCM: {        
+        ADPCMHeader adpcm_hdr = ADPCMHeader();
+        memcpy(&adpcm_hdr, messageStartIdx, sizeof(ADPCMHeader));
+
+        sizeB = adpcm_hdr.dataSize * 4; // assuming 1/4 compression ratio
+        bufB = (void*)malloc(sizeB);
+
+        ADPCMDecompress((void*)((size_t)messageStartIdx + sizeof(ADPCMHeader)), bufB, adpcm_hdr);
 
         break;
     }
@@ -385,18 +445,22 @@ size_t Message::getMessageSize() {
     return sizeO;
 }
 
-
-
-
-
+void Message::setWaveHeader(WAVEHeader hdr) {
+    waveHeader = (WAVEHeader*)malloc(sizeof(WAVEHeader));
+    if (waveHeader == nullptr) {
+        cerr << "ERROR! Message::setWaveHeader(): Unable to allocate memory" \
+        "for a Wave Header()" << endl;
+    }
+    memcpy(waveHeader, &hdr, sizeof(WAVEHeader));
+}
 
 void Message::printHeader() {
-    cout << "Message header:" << endl;
-    cout << "\tSender ID:   " << header.senderID << endl; 
-    cout << "\tReceiver ID: " << header.receiverID << endl; 
-    cout << "\tMessage ID:  " << header.messageID << endl; 
-    cout << "\tEncryption:  "; 
-    switch (header.encryption) {
+  cout << "Message header:" << endl;
+  cout << "\tSender ID:   " << header.senderID << endl;
+  cout << "\tReceiver ID: " << header.receiverID << endl;
+  cout << "\tMessage ID:  " << header.messageID << endl;
+  cout << "\tEncryption:  ";
+  switch (header.encryption) {
     case MSGEncryption::NONE:       cout << "none";         break;
     case MSGEncryption::AES:        cout << "AES";          break;
     case MSGEncryption::XOR:        cout << "XOR";          break;
@@ -425,12 +489,8 @@ void Message::printHeader() {
 
     cout << "\tOriginal size:" << header.decompressedSize << endl; 
     cout << "\tPayload size:" << header.payloadSize << endl; 
-    cout << "\tChecksum:" << header.checksum << endl; 
+    cout << "\tChecksum:" << header.checksum << endl;
 }
-
-
-
-
 
 /*****************************************************************************
  *                              Message Encoding                             *

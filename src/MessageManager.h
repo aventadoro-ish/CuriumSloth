@@ -4,6 +4,7 @@
 #include "Queue2.h"
 #include "COMPort.h"
 
+
 enum class MMTransmitState {
     WAIT_INPUT,     // wait for new data to transmit 
                     // send_queue is empty and active_file is nullptr
@@ -50,6 +51,8 @@ class MessageManger {
 
     COMPort* port;
 
+    WAVEHeader* waveHdr; // used for ADPCM compression
+
     void tickReceive();
     void sendAckState(MSGSystemMessages state);
     
@@ -71,8 +74,16 @@ public:
     /// @param type data type
     /// @param buf pointer to data
     /// @param bufLen data length in bytes
+    /// @param compression compression to be used
+    /// @param encryption encryption to be used
     /// @return 0 if successfully added to the transmission queue
-    int transmitData(int receiverID, MSGType type, void* buf, size_t bufLen);
+    int transmitData(int receiverID, 
+                     MSGType type, 
+                     void* buf, 
+                     size_t bufLen, 
+                     MSGCompression compression = MSGCompression::NONE, 
+                     MSGEncryption encryption = MSGEncryption::NONE);
+
 
 
     /// @brief Needs to be called in the main loop
@@ -89,6 +100,10 @@ public:
     size_t getBufferSize() {
         return max_message_size + sizeof(MSGHeader);
     }
+
+    /// @brief Copies a waveHeader into a member variable
+    /// @param waveHeader 
+    void setWaveHeader(WAVEHeader* waveHeader);
 
 
 };

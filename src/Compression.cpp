@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include "adpcm.h"
 
 using namespace std;
 
@@ -118,3 +119,11 @@ long long RLEdecompress(unsigned char* in, long long iInLen, unsigned char* out,
 	}
 }
 
+
+void ADPCMCompress(void* source, void* destination, const WAVEHeader &wav, ADPCMHeader &adpcm) {
+	compress((char*)source, (char*)destination, wav, adpcm);
+}
+
+void ADPCMDecompress(void* source, void* destination, const ADPCMHeader &adpcm) {
+	decompress((char*)source, (char*)destination, adpcm);
+}

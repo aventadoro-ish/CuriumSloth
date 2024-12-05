@@ -1,5 +1,7 @@
 #pragma once
 
+#include "wave.h"
+
 #ifdef _WIN32
 #include <windows.h>					// Contains WAVEFORMATEX structure
 typedef short AudioBufT;
@@ -198,6 +200,9 @@ public:
 #else
 #endif
 	}
+
+	WAVEHeader getWaveHeader();
+
 
 };
 

@@ -25,6 +25,14 @@
                     "-g", "${workspaceFolder}/src/*.cpp",
                     "-o", "${workspaceFolder}/output/CuriumSloth.exe",
                     "-I", "${fileDirname}",
+
+                    "-I", "${workspaceFolder}/include",
+                    "-I", "${workspaceFolder}/include/adpcm-lib",
+                    "-L", "${workspaceFolder}/include",
+                    "-L", "${workspaceFolder}/include/adpcm-lib",
+                    "-g", "${workspaceFolder}/include/adpcm-lib/*.cpp",
+                    
+                    // "-l", "adpcm-lib",
                     "-lWs2_32",
                     "-lWinmm"
                 ],
@@ -38,6 +46,7 @@
                     "-g", "${workspaceFolder}/src/*.cpp",
                     "-o", "${workspaceFolder}/output/CuriumSloth.elf",
                     "-I", "${fileDirname}",
+                    "-I", "${workspaceFolder}/include/*",
                     "-lasound"
                 ],
                 "options": {

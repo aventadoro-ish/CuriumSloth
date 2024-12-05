@@ -3,6 +3,7 @@
 #include <iostream>
 #include "utils.h"
 
+#include <adpcm.h>
 
 #include "CmS_Sound.h"
 
@@ -23,6 +24,8 @@ MessageManger::MessageManger(int senderID, size_t max_msg_size) {
 
     send_queue = QueueProper<Message>();
     receive_queue = QueueProper<Message>();
+
+    waveHdr = nullptr;
 }
 
 MessageManger::~MessageManger() {
@@ -39,39 +42,84 @@ unsigned long MessageManger::generateMsgID() {
 int MessageManger::transmitData(int receiverID,
                                 MSGType type,
                                 void* buf,
-                                size_t bufLen) {
+                                size_t bufLen, 
+                                MSGCompression compression, 
+                                MSGEncryption encryption) {
+    
+    if (compression == MSGCompression::ADPCM) {
+        if (type != MSGType::AUDIO) {
+            cerr << "WARNING! Trying to use ADPCM compression on a non audio message" << endl;
+            cerr << "Defaulting to NONE compression" << endl;
+            compression = MSGCompression::NONE;
+        }
+
+        if (waveHdr == nullptr) {
+            cerr << "WARNING! Trying to use ADPCM compression without providing" \
+                " a wave header" << endl;
+            cerr << "Defaulting to NONE compression" << endl;
+            compression = MSGCompression::NONE;
+        }
+    }
+
+    size_t temp_max_size = max_message_size;
+    WAVEHeader temp_wave_hdr = WAVEHeader();
+
+    if (compression == MSGCompression::ADPCM) {
+        size_t payload_size = max_message_size - sizeof(ADPCMHeader);
+        size_t uncompressed_payload_size = payload_size * 4; // assuming 1/4 compression ratio
+        temp_max_size = uncompressed_payload_size;  // will be used to determine the number of chunks
+
+        memcpy(&temp_wave_hdr, waveHdr, sizeof(WAVEHeader));
+    }
+
+
     int num_encode_faults = 0;
     int num_add_faults = 0;
     cout << "Total payload size is 0x" << hex << bufLen << dec << endl; 
     size_t sendingSize = 0;
 
     // round up int division
-    int num_msg = (bufLen + max_message_size - 1) / max_message_size;
+    int num_msg = (bufLen + temp_max_size - 1) / temp_max_size;
 
     // last iteration should eat the rest of the message
     // may be less than max_message_size bytes long
     for (int i = 0; i < num_msg - 1; i++) {
         Message* msg = new Message();
-        sendingSize += max_message_size;
-        void* start_idx = (void*)((unsigned long int)buf + (i * max_message_size));
+        sendingSize += temp_max_size;
+        void* start_idx = (void*)((unsigned long int)buf + (i * temp_max_size));
         
 #ifdef MM_DEBUG_ENABLE
-        cout << "Adding message from @" << hex << start_idx << endl;
+        cout << "MessageManger::transmitData() Adding compression ADPCM Header to message" << endl;
 #endif // MM_DEBUG_ENABLE
         
-        if (msg->addData(start_idx, max_message_size)) {
+        if (compression == MSGCompression::ADPCM) {
+            temp_wave_hdr.subchunk2Size = temp_max_size;
+            msg->setWaveHeader(temp_wave_hdr);
+        }
+
+#ifdef MM_DEBUG_ENABLE
+        cout << "MessageManger::transmitData() Adding message from @" << hex << start_idx << dec << endl;
+#endif // MM_DEBUG_ENABLE
+
+        if (msg->addData(start_idx, temp_max_size)) {
             num_add_faults++;
         }
-        
 
-
+#ifdef MM_DEBUG_ENABLE
+        cout << "MessageManger::transmitData() Describing message"  << endl;
+#endif // MM_DEBUG_ENABLE
         msg->describeData(senderID, 
                         receiverID,
                         generateMsgID(),
                         type,
-                        MSGEncryption::NONE,  // TODO: add a way to change that
-                        MSGCompression::NONE  // ... and this too ...
+                        encryption,
+                        compression
         );
+
+
+#ifdef MM_DEBUG_ENABLE
+        cout << "MessageManger::transmitData() Encoding message"  << endl;
+#endif // MM_DEBUG_ENABLE
 
         if (msg->encodeMessage()) {
             num_encode_faults++;
@@ -84,19 +132,25 @@ int MessageManger::transmitData(int receiverID,
 
     Message* msg = new Message();
     void* start_idx =
-        (void*)((unsigned long int)buf + ((num_msg - 1) * max_message_size));
+        (void*)((unsigned long int)buf + ((num_msg - 1) * temp_max_size));
     size_t len = bufLen - ((num_msg - 1) *
-                         max_message_size);  // TODO: check for off-by-1 error
+                         temp_max_size);  // TODO: check for off-by-1 error
     
     sendingSize += len;
 
    
     msg->addData(start_idx, len);
+
+    if (compression == MSGCompression::ADPCM) {
+        temp_wave_hdr.subchunk2Size = temp_max_size;
+        msg->setWaveHeader(temp_wave_hdr);
+    }
+    
     msg->describeData(senderID, receiverID,
                      generateMsgID(), 
                      type,
-                     MSGEncryption::NONE,  // TODO: add a way to change that
-                     MSGCompression::NONE  // ... and this too ...
+                     encryption,
+                     compression
     );
     msg->encodeMessage();
 
@@ -334,5 +388,15 @@ void MessageManger::replayAudio() {
 
 }
 
+void MessageManger::setWaveHeader(WAVEHeader* waveHeader) {
+    if (waveHeader == nullptr) {
+        cerr << "ERROR! MessageManger::setWaveHeader() got passed a nullptr" << endl;
+        return;
+    }
 
+    if (waveHdr == nullptr) {
+        waveHdr = (WAVEHeader*)malloc(sizeof(WAVEHeader));
+    }
 
+    memcpy(waveHdr, waveHeader, sizeof(WAVEHeader));
+}

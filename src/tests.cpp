@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 
+#include <adpcm.h>
 
 #include "COMPort.h"
 #include "Message.h"
@@ -11,6 +12,7 @@
 #include "CmS_Sound.h"
 #include "utils.h"
 
+#pragma message("Hereeee")
 
 
 using namespace std;
@@ -186,6 +188,44 @@ void COMSpeedTest() {
 
 
 
+void ADPCMCompressionTest() {
+    AudioRecorder ar = AudioRecorder();
+    
+    cout << "Recodring" << endl;
+    ar.recordAudio(5);
+    cout << "Replay" << endl;
+    ar.replayAudio();
+
+    cout << "Compress" << endl;
+    WAVEHeader waveHdr = ar.getWaveHeader();
+
+    void* compressedAudio = (void*)malloc(ADPCMDataSize(waveHdr));
+    ADPCMHeader adpcmHeader = ADPCMHeader();
+
+    compress((char*)ar.getBuffer(), (char*)compressedAudio, waveHdr, adpcmHeader);
+
+    cout << "Original size: " << ar.getBufferSize() << " Compressed size: " << ADPCMDataSize(waveHdr) << endl;
+    
+    
+    // needed for decompression: waveHdr.subchunk2Size, compressedAudio
+    cout << "adpcmHeader.dataSize = " << adpcmHeader.dataSize << endl;
+    cout << "adpcmHeader.chunkSize = " << adpcmHeader.chunkSize << endl;
+    cout << "adpcmHeader.ch2StepIndex = " << adpcmHeader.ch2StepIndex << endl;
+
+    cout << "Decompressing" << endl;
+    void* decompressedAudio = (void*)malloc(waveHdr.subchunk2Size);
+    decompress((char*)compressedAudio, (char*)decompressedAudio, adpcmHeader);
+
+    cout << "Replay" << endl;
+    AudioRecorder arp = AudioRecorder();
+    arp.setBuffer(decompressedAudio, waveHdr.subchunk2Size);
+    arp.replayAudio();
+
+    return;
+}
+
+
+
 void devTesting() {
     char ch;
     cout << "Enter t for transmit, r for receive side: ";
@@ -206,7 +246,6 @@ void devTesting() {
 
         cout << "Port is open. Populating buffer" << endl;
     
-        auto start = chrono::steady_clock::now();
 
         AudioRecorder ar = AudioRecorder(8000, 16, 1);
         cout << "Record audio" << endl;
@@ -216,7 +255,10 @@ void devTesting() {
         cout << "Total recording size is: " << hex << ar.getBufferSize() << dec << endl;
         cout << "Sending data" << endl;
 
-        txMan.transmitData(1, MSGType::AUDIO, ar.getBuffer(), ar.getBufferSize());
+        auto start = chrono::steady_clock::now();
+        WAVEHeader hdr = ar.getWaveHeader();
+        txMan.setWaveHeader(&hdr);
+        txMan.transmitData(1, MSGType::AUDIO, ar.getBuffer(), ar.getBufferSize(), MSGCompression::ADPCM);
 
         for (;;) {
             if (kbhit()) {
@@ -233,6 +275,15 @@ void devTesting() {
 
         auto end = chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+        cout << endl << endl << endl << dec;
+        cout << "Transmitted " << ar.getBufferSize() / 1024 << " kB (" 
+             << ar.getBufferSize() / 1024 / 4  << " kB after compression) in " 
+             << maxMes << " chunks in " << elapsed / 1000.0 << " seconds" << endl
+             << "Effective average transmission rate = " 
+             << 1000.0 * (double)ar.getBufferSize() / 1024.0 / elapsed 
+             << " kB/s" << endl;
+
         
     } else if (ch == 'r') {
         cout << "Receive side: Openning COM8" << endl;
