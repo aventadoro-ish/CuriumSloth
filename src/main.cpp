@@ -48,8 +48,8 @@ void rs232message();
 void comPortTest();
 
 int main() {
-    devTesting();
-    return 0;
+    // devTesting();
+    // return 0;
 
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
     bool running = true;
