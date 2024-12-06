@@ -19,6 +19,7 @@
 #include "Message.h"
 #include "MessageManager.h"
 #include "phonebook.h"
+#include "TextMessageTest.h"
 
 #ifdef _WIN32
 #define UNICODE     // needed for Windows COM ports for some reason
@@ -49,6 +50,7 @@ void setSampleRate();
 void rs232message();
 void comPortTest();
 void phonebookMenu();
+void messageTest();
 
 int main() {
     int mainChoice, homeChoice, receieveChoice, communicationChoice;
@@ -86,6 +88,8 @@ int main() {
                 case 6:
                     comPortTest(); // Test Function for COM Port
                     break;
+                case 7:
+                    messageTest(); // Test Function for Text Message
                 case 0:
                     inHomeMenu = false;  // Go back to the main menu
                     break;
@@ -226,4 +230,9 @@ void comPortTest() {
 void phonebookMenu() {
     Phonebook pb;
     pb.menu();
+}
+
+// Function to test sending and receiving text messages
+void messageTest() {
+    testTextMessageWithOptions(txPortName, rxPortName);
 }
