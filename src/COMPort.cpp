@@ -79,8 +79,7 @@ COMPort::~COMPort() {
 
 CPErrorCode COMPort::openPort(char* port_name) {
     if (isPortOpen()) {
-        cerr << "Unable to open " << port_name 
-             << ". Port is already open for " << this->port_name << endl;
+        std::cerr << "Error: Port is already open: " << this->port_name << "\n";
         return CPErrorCode::PORT_IS_OPEN;
     }
 

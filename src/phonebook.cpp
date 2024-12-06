@@ -72,14 +72,13 @@ void Phonebook::viewMessagesBySender(int senderID) {
 }
 
 void Phonebook::testSendReceive() {
-    int senderPortNum, receiverPortNum;
+    if (txPortName.empty() || rxPortName.empty()) {
+        std::cerr << "Error: COM ports are not configured. Please set them first.\n";
+        return;
+    }
+
     string message;
     int senderID, receiverID;
-
-    cout << "Enter Sender Port Number (e.g., 1 for COM1): ";
-    cin >> senderPortNum;
-    cout << "Enter Receiver Port Number (e.g., 2 for COM2): ";
-    cin >> receiverPortNum;
 
     cout << "Enter Sender ID: ";
     cin >> senderID;
@@ -87,28 +86,39 @@ void Phonebook::testSendReceive() {
     cin >> receiverID;
 
     cout << "Enter Message: ";
-    cin.ignore(); // Clear newline character from the input buffer
+    cin.ignore(); // Clear newline
     getline(cin, message);
 
-    // Construct COM port names
-    string comPortSender = "COM" + to_string(senderPortNum);
-    string comPortReceiver = "COM" + to_string(receiverPortNum);
-
     // Open COM ports
-    COMPort senderPort, receiverPort;
-    senderPort.openPort(const_cast<char*>(comPortSender.c_str()));
-    receiverPort.openPort(const_cast<char*>(comPortReceiver.c_str()));
+    COMPort senderPort(COMPortBaud::COM_BAUD_9600, CPParity::NONE, 1);
+    COMPort receiverPort(COMPortBaud::COM_BAUD_9600, CPParity::NONE, 1);
+
+    if (senderPort.openPort(const_cast<char*>(txPortName.c_str())) != CPErrorCode::SUCCESS) {
+        std::cerr << "Error: Failed to open transmitter port: " << txPortName << "\n";
+        return;
+    }
+
+    if (receiverPort.openPort(const_cast<char*>(rxPortName.c_str())) != CPErrorCode::SUCCESS) {
+        std::cerr << "Error: Failed to open receiver port: " << rxPortName << "\n";
+        senderPort.closePort(); // Ensure cleanup
+        return;
+    }
 
     // Send the message
-    senderPort.sendMessage(const_cast<char*>(message.c_str()), message.size());
+    if (senderPort.sendMessage(const_cast<char*>(message.c_str()), message.size()) == CPErrorCode::SUCCESS) {
+        std::cout << "Message sent successfully.\n";
+    } else {
+        std::cerr << "Error sending message.\n";
+    }
 
     // Receive the message
-    char buffer[1024] = { 0 };
-    size_t bytesRead = 0; // Variable to store the number of bytes read
-    receiverPort.receiveMessage(buffer, sizeof(buffer), &bytesRead, 5000);
-
-    cout << "Message sent and received successfully.\n";
-    cout << "Received Message: " << buffer << endl;
+    char buffer[1024] = {0};
+    size_t bytesRead = 0;
+    if (receiverPort.receiveMessage(buffer, sizeof(buffer), &bytesRead, 5000) == CPErrorCode::SUCCESS) {
+        std::cout << "Received Message: " << string(buffer, bytesRead) << "\n";
+    } else {
+        std::cerr << "Error receiving message.\n";
+    }
 
     // Store messages in the phonebook
     addMessage(senderID, message, false);
@@ -118,6 +128,7 @@ void Phonebook::testSendReceive() {
     senderPort.closePort();
     receiverPort.closePort();
 }
+
 
 
 void Phonebook::menu() {

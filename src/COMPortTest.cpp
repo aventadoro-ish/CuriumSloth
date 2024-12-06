@@ -95,4 +95,6 @@ void testCOMPort(const char* txPortName, const char* rxPortName) {
     else {
         cerr << "Error: Failed to close RX port." << endl;
     }
+
+    system("pause");
 }

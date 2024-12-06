@@ -224,8 +224,6 @@ void comPortTest() {
 
 // Function to display the phonebook menu
 void phonebookMenu() {
-    setCOMport();
-
     Phonebook pb;
     pb.menu();
 }
